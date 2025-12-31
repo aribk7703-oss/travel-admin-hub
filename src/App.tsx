@@ -14,6 +14,20 @@ import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import NotFound from "./pages/NotFound";
 
+// Admin Pages
+import LocationsPage from "./pages/admin/LocationsPage";
+import CarsPage from "./pages/admin/CarsPage";
+import CouponsPage from "./pages/admin/CouponsPage";
+import ReviewsPage from "./pages/admin/ReviewsPage";
+import NewsPage from "./pages/admin/NewsPage";
+import PagesPage from "./pages/admin/PagesPage";
+import MediaPage from "./pages/admin/MediaPage";
+import UsersPage from "./pages/admin/UsersPage";
+import PlansPage from "./pages/admin/PlansPage";
+import SettingsPage from "./pages/admin/SettingsPage";
+import ReportsPage from "./pages/admin/ReportsPage";
+import GenericAdminPage from "./pages/admin/GenericAdminPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -32,6 +46,32 @@ const App = () => (
           <Route path="/booking" element={<BookingPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          
+          {/* Admin Routes */}
+          <Route path="/locations" element={<LocationsPage />} />
+          <Route path="/locations/add" element={<GenericAdminPage />} />
+          <Route path="/tours/add" element={<GenericAdminPage />} />
+          <Route path="/tours/categories" element={<GenericAdminPage />} />
+          <Route path="/cars" element={<CarsPage />} />
+          <Route path="/cars/add" element={<GenericAdminPage />} />
+          <Route path="/coupons" element={<CouponsPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/news/add" element={<GenericAdminPage />} />
+          <Route path="/pages" element={<PagesPage />} />
+          <Route path="/media" element={<MediaPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/users/add" element={<GenericAdminPage />} />
+          <Route path="/plans" element={<PlansPage />} />
+          <Route path="/plans/add" element={<GenericAdminPage />} />
+          <Route path="/popup" element={<GenericAdminPage />} />
+          <Route path="/menu" element={<GenericAdminPage />} />
+          <Route path="/payouts" element={<GenericAdminPage />} />
+          <Route path="/themes" element={<GenericAdminPage />} />
+          <Route path="/settings/*" element={<SettingsPage />} />
+          <Route path="/tools/*" element={<GenericAdminPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
