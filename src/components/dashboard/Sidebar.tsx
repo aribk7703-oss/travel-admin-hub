@@ -32,34 +32,34 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: "Dashboard", icon: LayoutDashboard, href: "/" },
+  { title: "Dashboard", icon: LayoutDashboard, href: "/admin" },
   {
     title: "Location",
     icon: MapPin,
     children: [
-      { title: "All Locations", href: "/locations" },
-      { title: "Add Location", href: "/locations/add" },
+      { title: "All Locations", href: "/admin/locations" },
+      { title: "Add Location", href: "/admin/locations/add" },
     ],
   },
   {
     title: "Tour",
     icon: Plane,
     children: [
-      { title: "All Tours", href: "/tours" },
-      { title: "Add Tour", href: "/tours/add" },
-      { title: "Categories", href: "/tours/categories" },
+      { title: "All Tours", href: "/admin/tours" },
+      { title: "Add Tour", href: "/admin/tours/add" },
+      { title: "Categories", href: "/admin/tours/categories" },
     ],
   },
   {
     title: "Car",
     icon: Car,
     children: [
-      { title: "All Cars", href: "/cars" },
-      { title: "Add Car", href: "/cars/add" },
+      { title: "All Cars", href: "/admin/cars" },
+      { title: "Add Car", href: "/admin/cars/add" },
     ],
   },
-  { title: "Coupon", icon: Ticket, href: "/coupons" },
-  { title: "Reviews", icon: Star, href: "/reviews" },
+  { title: "Coupon", icon: Ticket, href: "/admin/coupons" },
+  { title: "Reviews", icon: Star, href: "/admin/reviews" },
 ];
 
 const contentItems: NavItem[] = [
@@ -67,12 +67,12 @@ const contentItems: NavItem[] = [
     title: "News",
     icon: Newspaper,
     children: [
-      { title: "All News", href: "/news" },
-      { title: "Add News", href: "/news/add" },
+      { title: "All News", href: "/admin/news" },
+      { title: "Add News", href: "/admin/news/add" },
     ],
   },
-  { title: "Page", icon: FileText, href: "/pages" },
-  { title: "Media", icon: Image, href: "/media" },
+  { title: "Page", icon: FileText, href: "/admin/pages" },
+  { title: "Media", icon: Image, href: "/admin/media" },
 ];
 
 const systemItems: NavItem[] = [
@@ -80,40 +80,40 @@ const systemItems: NavItem[] = [
     title: "Users",
     icon: Users,
     children: [
-      { title: "All Users", href: "/users" },
-      { title: "Add User", href: "/users/add" },
+      { title: "All Users", href: "/admin/users" },
+      { title: "Add User", href: "/admin/users/add" },
     ],
   },
   {
     title: "User Plans",
     icon: CreditCard,
     children: [
-      { title: "All Plans", href: "/plans" },
-      { title: "Add Plan", href: "/plans/add" },
+      { title: "All Plans", href: "/admin/plans" },
+      { title: "Add Plan", href: "/admin/plans/add" },
     ],
   },
-  { title: "Popup", icon: MessageSquare, href: "/popup" },
-  { title: "Menu", icon: MenuIcon, href: "/menu" },
-  { title: "Payouts", icon: Wallet, href: "/payouts" },
-  { title: "Themes", icon: Palette, href: "/themes" },
+  { title: "Popup", icon: MessageSquare, href: "/admin/popup" },
+  { title: "Menu", icon: MenuIcon, href: "/admin/menu" },
+  { title: "Payouts", icon: Wallet, href: "/admin/payouts" },
+  { title: "Themes", icon: Palette, href: "/admin/themes" },
   {
     title: "Settings",
     icon: Settings,
     children: [
-      { title: "General", href: "/settings/general" },
-      { title: "Payment", href: "/settings/payment" },
-      { title: "Email", href: "/settings/email" },
+      { title: "General", href: "/admin/settings/general" },
+      { title: "Payment", href: "/admin/settings/payment" },
+      { title: "Email", href: "/admin/settings/email" },
     ],
   },
   {
     title: "Tools",
     icon: Wrench,
     children: [
-      { title: "Import", href: "/tools/import" },
-      { title: "Export", href: "/tools/export" },
+      { title: "Import", href: "/admin/tools/import" },
+      { title: "Export", href: "/admin/tools/export" },
     ],
   },
-  { title: "Reports", icon: BarChart3, href: "/reports" },
+  { title: "Reports", icon: BarChart3, href: "/admin/reports" },
 ];
 
 interface SidebarProps {
@@ -261,17 +261,17 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-sidebar-ring flex items-center justify-center">
-              <Plane className="h-5 w-5 text-sidebar-primary" />
+            <div className="h-8 w-8 rounded-lg bg-success flex items-center justify-center">
+              <Car className="h-5 w-5 text-white" />
             </div>
             <span className="text-lg font-bold text-sidebar-primary">
-              TravelAdmin
+              Green Cab
             </span>
           </div>
         )}
         {collapsed && (
-          <div className="mx-auto h-8 w-8 rounded-lg bg-sidebar-ring flex items-center justify-center">
-            <Plane className="h-5 w-5 text-sidebar-primary" />
+          <div className="mx-auto h-8 w-8 rounded-lg bg-success flex items-center justify-center">
+            <Car className="h-5 w-5 text-white" />
           </div>
         )}
       </div>
