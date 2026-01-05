@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import {
   LayoutDashboard,
   MapPin,
@@ -22,6 +23,7 @@ import {
   BarChart3,
   ChevronDown,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 
 interface NavItem {
@@ -237,6 +239,7 @@ const NavSection = ({
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAdminAuth();
   const currentPath = location.pathname;
   const [expandedItems, setExpandedItems] = useState<string[]>(["Tour"]);
 
@@ -250,10 +253,15 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     navigate(href);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/admin/login');
+  };
+
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300 sidebar-scrollbar overflow-y-auto",
+        "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300 sidebar-scrollbar overflow-y-auto flex flex-col",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -277,7 +285,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       </div>
 
       {/* Navigation */}
-      <nav className="p-3 space-y-6">
+      <nav className="p-3 space-y-6 flex-1">
         <NavSection
           items={navItems}
           collapsed={collapsed}
@@ -307,6 +315,26 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           onNavigate={handleNavigate}
         />
       </nav>
+
+      {/* User Info & Logout */}
+      <div className="p-3 border-t border-sidebar-border">
+        {!collapsed && user && (
+          <div className="px-4 py-2 mb-2">
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
+            <p className="text-xs text-sidebar-muted truncate">{user.email}</p>
+          </div>
+        )}
+        <button
+          onClick={handleLogout}
+          className={cn(
+            "w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+            "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+          )}
+        >
+          <LogOut className="h-5 w-5 shrink-0" />
+          {!collapsed && <span>Logout</span>}
+        </button>
+      </div>
     </aside>
   );
 };
