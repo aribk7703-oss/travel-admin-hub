@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import {
   LayoutDashboard,
   MapPin,
@@ -23,9 +22,6 @@ import {
   BarChart3,
   ChevronDown,
   ChevronRight,
-  LogOut,
-  ClipboardList,
-  Briefcase,
 } from "lucide-react";
 
 interface NavItem {
@@ -36,36 +32,34 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: "Dashboard", icon: LayoutDashboard, href: "/admin" },
-  { title: "Bookings", icon: ClipboardList, href: "/admin/bookings" },
-  { title: "Services", icon: Briefcase, href: "/admin/services" },
+  { title: "Dashboard", icon: LayoutDashboard, href: "/" },
   {
     title: "Location",
     icon: MapPin,
     children: [
-      { title: "All Locations", href: "/admin/locations" },
-      { title: "Add Location", href: "/admin/locations/add" },
+      { title: "All Locations", href: "/locations" },
+      { title: "Add Location", href: "/locations/add" },
     ],
   },
   {
     title: "Tour",
     icon: Plane,
     children: [
-      { title: "All Tours", href: "/admin/tours" },
-      { title: "Add Tour", href: "/admin/tours/add" },
-      { title: "Categories", href: "/admin/tours/categories" },
+      { title: "All Tours", href: "/tours" },
+      { title: "Add Tour", href: "/tours/add" },
+      { title: "Categories", href: "/tours/categories" },
     ],
   },
   {
     title: "Car",
     icon: Car,
     children: [
-      { title: "All Cars", href: "/admin/cars" },
-      { title: "Add Car", href: "/admin/cars/add" },
+      { title: "All Cars", href: "/cars" },
+      { title: "Add Car", href: "/cars/add" },
     ],
   },
-  { title: "Coupon", icon: Ticket, href: "/admin/coupons" },
-  { title: "Reviews", icon: Star, href: "/admin/reviews" },
+  { title: "Coupon", icon: Ticket, href: "/coupons" },
+  { title: "Reviews", icon: Star, href: "/reviews" },
 ];
 
 const contentItems: NavItem[] = [
@@ -73,12 +67,12 @@ const contentItems: NavItem[] = [
     title: "News",
     icon: Newspaper,
     children: [
-      { title: "All News", href: "/admin/news" },
-      { title: "Add News", href: "/admin/news/add" },
+      { title: "All News", href: "/news" },
+      { title: "Add News", href: "/news/add" },
     ],
   },
-  { title: "Page", icon: FileText, href: "/admin/pages" },
-  { title: "Media", icon: Image, href: "/admin/media" },
+  { title: "Page", icon: FileText, href: "/pages" },
+  { title: "Media", icon: Image, href: "/media" },
 ];
 
 const systemItems: NavItem[] = [
@@ -86,40 +80,40 @@ const systemItems: NavItem[] = [
     title: "Users",
     icon: Users,
     children: [
-      { title: "All Users", href: "/admin/users" },
-      { title: "Add User", href: "/admin/users/add" },
+      { title: "All Users", href: "/users" },
+      { title: "Add User", href: "/users/add" },
     ],
   },
   {
     title: "User Plans",
     icon: CreditCard,
     children: [
-      { title: "All Plans", href: "/admin/plans" },
-      { title: "Add Plan", href: "/admin/plans/add" },
+      { title: "All Plans", href: "/plans" },
+      { title: "Add Plan", href: "/plans/add" },
     ],
   },
-  { title: "Popup", icon: MessageSquare, href: "/admin/popup" },
-  { title: "Menu", icon: MenuIcon, href: "/admin/menu" },
-  { title: "Payouts", icon: Wallet, href: "/admin/payouts" },
-  { title: "Themes", icon: Palette, href: "/admin/themes" },
+  { title: "Popup", icon: MessageSquare, href: "/popup" },
+  { title: "Menu", icon: MenuIcon, href: "/menu" },
+  { title: "Payouts", icon: Wallet, href: "/payouts" },
+  { title: "Themes", icon: Palette, href: "/themes" },
   {
     title: "Settings",
     icon: Settings,
     children: [
-      { title: "General", href: "/admin/settings/general" },
-      { title: "Payment", href: "/admin/settings/payment" },
-      { title: "Email", href: "/admin/settings/email" },
+      { title: "General", href: "/settings/general" },
+      { title: "Payment", href: "/settings/payment" },
+      { title: "Email", href: "/settings/email" },
     ],
   },
   {
     title: "Tools",
     icon: Wrench,
     children: [
-      { title: "Import", href: "/admin/tools/import" },
-      { title: "Export", href: "/admin/tools/export" },
+      { title: "Import", href: "/tools/import" },
+      { title: "Export", href: "/tools/export" },
     ],
   },
-  { title: "Reports", icon: BarChart3, href: "/admin/reports" },
+  { title: "Reports", icon: BarChart3, href: "/reports" },
 ];
 
 interface SidebarProps {
@@ -243,7 +237,6 @@ const NavSection = ({
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAdminAuth();
   const currentPath = location.pathname;
   const [expandedItems, setExpandedItems] = useState<string[]>(["Tour"]);
 
@@ -257,15 +250,10 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     navigate(href);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
-
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300 sidebar-scrollbar overflow-y-auto flex flex-col",
+        "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300 sidebar-scrollbar overflow-y-auto",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -273,23 +261,23 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-success flex items-center justify-center">
-              <Car className="h-5 w-5 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-sidebar-ring flex items-center justify-center">
+              <Plane className="h-5 w-5 text-sidebar-primary" />
             </div>
             <span className="text-lg font-bold text-sidebar-primary">
-              Green Cab
+              TravelAdmin
             </span>
           </div>
         )}
         {collapsed && (
-          <div className="mx-auto h-8 w-8 rounded-lg bg-success flex items-center justify-center">
-            <Car className="h-5 w-5 text-white" />
+          <div className="mx-auto h-8 w-8 rounded-lg bg-sidebar-ring flex items-center justify-center">
+            <Plane className="h-5 w-5 text-sidebar-primary" />
           </div>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="p-3 space-y-6 flex-1">
+      <nav className="p-3 space-y-6">
         <NavSection
           items={navItems}
           collapsed={collapsed}
@@ -319,26 +307,6 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           onNavigate={handleNavigate}
         />
       </nav>
-
-      {/* User Info & Logout */}
-      <div className="p-3 border-t border-sidebar-border">
-        {!collapsed && user && (
-          <div className="px-4 py-2 mb-2">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-            <p className="text-xs text-sidebar-muted truncate">{user.email}</p>
-          </div>
-        )}
-        <button
-          onClick={handleLogout}
-          className={cn(
-            "w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-            "text-red-400 hover:bg-red-500/10 hover:text-red-300"
-          )}
-        >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Logout</span>}
-        </button>
-      </div>
     </aside>
   );
 };

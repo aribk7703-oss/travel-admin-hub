@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Car } from "lucide-react";
+import { Menu, X, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Tours", href: "/tours" },
-  { name: "Packages", href: "/packages" },
+  { name: "Home", href: "/home" },
+  { name: "Tours", href: "/tours-listing" },
   { name: "Car Rental", href: "/car-rental" },
   { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
@@ -22,11 +21,11 @@ export const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-success flex items-center justify-center">
-              <Car className="h-5 w-5 text-primary-foreground" />
+          <Link to="/home" className="flex items-center gap-2">
+            <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+              <Plane className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">Green Cab</span>
+            <span className="text-xl font-bold text-foreground">TravelGo</span>
           </Link>
 
           {/* Desktop Navigation */}

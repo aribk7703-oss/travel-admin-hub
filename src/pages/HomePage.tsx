@@ -80,32 +80,32 @@ const HomePage = () => {
   return (
     <WebsiteLayout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-success to-success/80 text-primary-foreground py-20 lg:py-32">
+      <section className="relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground py-20 lg:py-32">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop')] bg-cover bg-center opacity-20" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl lg:text-6xl font-bold mb-6 animate-fade-in">
-              Your Journey, Our Priority
+              Discover Your Next Adventure
             </h1>
             <p className="text-lg lg:text-xl opacity-90 mb-8 animate-fade-in">
-              Green Cab Tours & Travels — Explore breathtaking destinations, book unforgettable tours, 
-              and create memories that last a lifetime. Safe, reliable, and affordable travel.
+              Explore breathtaking destinations, book unforgettable tours, and create 
+              memories that last a lifetime. Your journey starts here.
             </p>
             <div className="flex flex-wrap gap-4 animate-fade-in">
-              <Link to="/tours">
-                <Button size="lg" className="bg-card text-foreground hover:bg-card/90">
+              <Link to="/tours-listing">
+                <Button size="lg" className="bg-card text-primary hover:bg-card/90">
                   <Plane className="mr-2 h-5 w-5" />
                   Explore Tours
                 </Button>
               </Link>
               <Link to="/car-rental">
-                <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-success">
+                <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                   <Car className="mr-2 h-5 w-5" />
                   Rent a Car
                 </Button>
               </Link>
-              <Link to="/packages">
-                <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-success">
+              <Link to="/booking">
+                <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                   <Package className="mr-2 h-5 w-5" />
                   View Packages
                 </Button>
@@ -173,7 +173,7 @@ const HomePage = () => {
               <h2 className="text-3xl font-bold text-foreground mb-2">Featured Tours</h2>
               <p className="text-muted-foreground">Explore our most popular destinations</p>
             </div>
-            <Link to="/tours">
+            <Link to="/tours-listing">
               <Button variant="outline">View All Tours</Button>
             </Link>
           </div>
@@ -220,21 +220,21 @@ const HomePage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-success text-primary-foreground">
+      <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
           <p className="text-primary-foreground/80 max-w-2xl mx-auto mb-8">
-            Contact Green Cab today and let us help you plan the perfect trip. 
+            Contact us today and let us help you plan the perfect trip. 
             Whether it's a weekend getaway or a month-long adventure, we've got you covered.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link to="/booking">
-              <Button size="lg" className="bg-card text-foreground hover:bg-card/90">
+              <Button size="lg" className="bg-card text-primary hover:bg-card/90">
                 Book Now
               </Button>
             </Link>
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-success">
+              <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                 Contact Us
               </Button>
             </Link>
