@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -124,22 +123,21 @@ interface SidebarProps {
 const NavItemComponent = ({
   item,
   collapsed,
-  currentPath,
+  activeItem,
+  setActiveItem,
   expandedItems,
   toggleExpanded,
-  onNavigate,
 }: {
   item: NavItem;
   collapsed: boolean;
-  currentPath: string;
+  activeItem: string;
+  setActiveItem: (item: string) => void;
   expandedItems: string[];
   toggleExpanded: (item: string) => void;
-  onNavigate: (href: string) => void;
 }) => {
-  const isActive = item.href === currentPath;
+  const isActive = activeItem === item.title;
   const isExpanded = expandedItems.includes(item.title);
   const hasChildren = item.children && item.children.length > 0;
-  const isChildActive = hasChildren && item.children!.some(child => child.href === currentPath);
 
   return (
     <div>
@@ -147,13 +145,13 @@ const NavItemComponent = ({
         onClick={() => {
           if (hasChildren) {
             toggleExpanded(item.title);
-          } else if (item.href) {
-            onNavigate(item.href);
+          } else {
+            setActiveItem(item.title);
           }
         }}
         className={cn(
           "w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-          isActive || isChildActive
+          isActive
             ? "bg-sidebar-accent text-sidebar-accent-foreground"
             : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
         )}
@@ -180,10 +178,10 @@ const NavItemComponent = ({
           {item.children!.map((child) => (
             <button
               key={child.title}
-              onClick={() => onNavigate(child.href)}
+              onClick={() => setActiveItem(child.title)}
               className={cn(
                 "w-full text-left px-4 py-2 text-sm rounded-lg transition-colors",
-                currentPath === child.href
+                activeItem === child.title
                   ? "text-sidebar-primary bg-sidebar-accent/30"
                   : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
               )}
@@ -201,18 +199,18 @@ const NavSection = ({
   title,
   items,
   collapsed,
-  currentPath,
+  activeItem,
+  setActiveItem,
   expandedItems,
   toggleExpanded,
-  onNavigate,
 }: {
   title?: string;
   items: NavItem[];
   collapsed: boolean;
-  currentPath: string;
+  activeItem: string;
+  setActiveItem: (item: string) => void;
   expandedItems: string[];
   toggleExpanded: (item: string) => void;
-  onNavigate: (href: string) => void;
 }) => (
   <div className="space-y-1">
     {title && !collapsed && (
@@ -225,29 +223,23 @@ const NavSection = ({
         key={item.title}
         item={item}
         collapsed={collapsed}
-        currentPath={currentPath}
+        activeItem={activeItem}
+        setActiveItem={setActiveItem}
         expandedItems={expandedItems}
         toggleExpanded={toggleExpanded}
-        onNavigate={onNavigate}
       />
     ))}
   </div>
 );
 
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const currentPath = location.pathname;
-  const [expandedItems, setExpandedItems] = useState<string[]>(["Tour"]);
+  const [activeItem, setActiveItem] = useState("Dashboard");
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const toggleExpanded = (item: string) => {
     setExpandedItems((prev) =>
       prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
-  };
-
-  const handleNavigate = (href: string) => {
-    navigate(href);
   };
 
   return (
@@ -281,30 +273,30 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         <NavSection
           items={navItems}
           collapsed={collapsed}
-          currentPath={currentPath}
+          activeItem={activeItem}
+          setActiveItem={setActiveItem}
           expandedItems={expandedItems}
           toggleExpanded={toggleExpanded}
-          onNavigate={handleNavigate}
         />
 
         <NavSection
           title="Content"
           items={contentItems}
           collapsed={collapsed}
-          currentPath={currentPath}
+          activeItem={activeItem}
+          setActiveItem={setActiveItem}
           expandedItems={expandedItems}
           toggleExpanded={toggleExpanded}
-          onNavigate={handleNavigate}
         />
 
         <NavSection
           title="System"
           items={systemItems}
           collapsed={collapsed}
-          currentPath={currentPath}
+          activeItem={activeItem}
+          setActiveItem={setActiveItem}
           expandedItems={expandedItems}
           toggleExpanded={toggleExpanded}
-          onNavigate={handleNavigate}
         />
       </nav>
     </aside>
