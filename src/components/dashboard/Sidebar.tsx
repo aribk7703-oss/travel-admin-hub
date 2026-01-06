@@ -24,6 +24,8 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
+  ClipboardList,
+  Briefcase,
 } from "lucide-react";
 
 interface NavItem {
@@ -35,6 +37,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/admin" },
+  { title: "Bookings", icon: ClipboardList, href: "/admin/bookings" },
+  { title: "Services", icon: Briefcase, href: "/admin/services" },
   {
     title: "Location",
     icon: MapPin,

@@ -21,6 +21,8 @@ import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import DashboardPage from "./pages/admin/DashboardPage";
+import BookingsPage from "./pages/admin/BookingsPage";
+import ServicesPage from "./pages/admin/ServicesPage";
 import ToursAdminPage from "./pages/admin/ToursAdminPage";
 import AddTourPage from "./pages/admin/AddTourPage";
 import LocationsPage from "./pages/admin/LocationsPage";
@@ -62,6 +64,8 @@ const App = () => (
             {/* Protected Admin Routes */}
             <Route path="/admin" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/admin/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
+            <Route path="/admin/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
             <Route path="/admin/tours" element={<ProtectedRoute><ToursAdminPage /></ProtectedRoute>} />
             <Route path="/admin/tours/add" element={<ProtectedRoute><AddTourPage /></ProtectedRoute>} />
             <Route path="/admin/tours/:id/edit" element={<ProtectedRoute><AddTourPage /></ProtectedRoute>} />
