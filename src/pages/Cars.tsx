@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,88 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Users, Briefcase, Fuel, Snowflake, Tv } from "lucide-react";
-
-interface Car {
-  id: number;
-  name: string;
-  type: string;
-  seats: number;
-  feature: string;
-  featureIcon: React.ComponentType<{ className?: string }>;
-  pricePerKm: string;
-  status: "active" | "inactive" | "maintenance";
-  image: string;
-}
-
-const carsData: Car[] = [
-  {
-    id: 1,
-    name: "Executive Sedan",
-    type: "Sedan",
-    seats: 4,
-    feature: "3 Bags",
-    featureIcon: Briefcase,
-    pricePerKm: "₹13/km",
-    status: "active",
-    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=200&h=120&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Premium SUV",
-    type: "SUV",
-    seats: 7,
-    feature: "5 Bags",
-    featureIcon: Briefcase,
-    pricePerKm: "₹18/km",
-    status: "active",
-    image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=200&h=120&fit=crop",
-  },
-  {
-    id: 3,
-    name: "City Hatchback",
-    type: "Hatchback",
-    seats: 4,
-    feature: "Budget",
-    featureIcon: Briefcase,
-    pricePerKm: "₹11/km",
-    status: "active",
-    image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=200&h=120&fit=crop",
-  },
-  {
-    id: 4,
-    name: "Tempo Traveller",
-    type: "Traveller",
-    seats: 17,
-    feature: "Fully AC",
-    featureIcon: Snowflake,
-    pricePerKm: "₹24/km",
-    status: "active",
-    image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200&h=120&fit=crop",
-  },
-  {
-    id: 5,
-    name: "Economy MUV",
-    type: "MUV",
-    seats: 6,
-    feature: "Diesel",
-    featureIcon: Fuel,
-    pricePerKm: "₹15/km",
-    status: "maintenance",
-    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=200&h=120&fit=crop",
-  },
-  {
-    id: 6,
-    name: "Luxury Tourist Coach",
-    type: "Bus",
-    seats: 40,
-    feature: "Video Coach",
-    featureIcon: Tv,
-    pricePerKm: "Contact",
-    status: "active",
-    image: "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=200&h=120&fit=crop",
-  },
-];
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { useCars, type Car } from "@/hooks/useCars";
+import { CarFormDialog } from "@/components/dashboard/CarFormDialog";
+import { toast } from "sonner";
 
 const getStatusBadge = (status: Car["status"]) => {
   const variants = {
@@ -107,6 +40,32 @@ const getStatusBadge = (status: Car["status"]) => {
 };
 
 const Cars = () => {
+  const { cars, addCar, updateCar, deleteCar, stats } = useCars();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingCar, setEditingCar] = useState<Car | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleAdd = (car: Omit<Car, "id">) => {
+    addCar(car);
+    toast.success("Vehicle added successfully!");
+  };
+
+  const handleEdit = (car: Omit<Car, "id">) => {
+    if (editingCar) {
+      updateCar(editingCar.id, car);
+      toast.success("Vehicle updated successfully!");
+      setEditingCar(null);
+    }
+  };
+
+  const handleDelete = () => {
+    if (deleteId) {
+      deleteCar(deleteId);
+      toast.success("Vehicle deleted successfully!");
+      setDeleteId(null);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
@@ -120,7 +79,7 @@ const Cars = () => {
               Manage your fleet of vehicles for tour bookings
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add New Car
           </Button>
@@ -130,25 +89,25 @@ const Cars = () => {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-foreground">6</div>
+              <div className="text-2xl font-bold text-foreground">{stats.total}</div>
               <p className="text-sm text-muted-foreground">Total Vehicles</p>
             </CardContent>
           </Card>
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-green-600">5</div>
+              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
               <p className="text-sm text-muted-foreground">Active</p>
             </CardContent>
           </Card>
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-yellow-600">1</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.maintenance}</div>
               <p className="text-sm text-muted-foreground">In Maintenance</p>
             </CardContent>
           </Card>
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-foreground">78</div>
+              <div className="text-2xl font-bold text-foreground">{stats.totalSeats}</div>
               <p className="text-sm text-muted-foreground">Total Seats</p>
             </CardContent>
           </Card>
@@ -173,7 +132,7 @@ const Cars = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {carsData.map((car) => (
+                {cars.map((car) => (
                   <TableRow key={car.id} className="border-border">
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -197,10 +156,7 @@ const Cars = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <car.featureIcon className="h-4 w-4" />
-                        <span>{car.feature}</span>
-                      </div>
+                      <span className="text-muted-foreground">{car.feature}</span>
                     </TableCell>
                     <TableCell>
                       <span className="font-semibold text-primary">{car.pricePerKm}</span>
@@ -208,10 +164,20 @@ const Cars = () => {
                     <TableCell>{getStatusBadge(car.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setEditingCar(car)}
+                        >
                           <Edit className="h-4 w-4 text-muted-foreground" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setDeleteId(car.id)}
+                        >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -223,6 +189,41 @@ const Cars = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Add Car Dialog */}
+      <CarFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleAdd}
+        mode="add"
+      />
+
+      {/* Edit Car Dialog */}
+      <CarFormDialog
+        open={!!editingCar}
+        onOpenChange={(open) => !open && setEditingCar(null)}
+        onSubmit={handleEdit}
+        initialData={editingCar || undefined}
+        mode="edit"
+      />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Vehicle</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this vehicle? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
