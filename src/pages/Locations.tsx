@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Button } from '@/components/ui/button';
@@ -6,16 +6,46 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, Images } from 'lucide-react';
 import { useLocations, Location } from '@/hooks/useLocations';
+import { useTours, Tour } from '@/hooks/useTours';
 import { LocationFormDialog } from '@/components/dashboard/LocationFormDialog';
 import LocationsMap from '@/components/dashboard/LocationsMap';
+import { LocationDetailDialog } from '@/components/dashboard/LocationDetailDialog';
+import { ImageGallery } from '@/components/dashboard/ImageGallery';
 
 const Locations = () => {
   const { locations, addLocation, updateLocation, deleteLocation, stats } = useLocations();
+  const { tours } = useTours();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [detailLocation, setDetailLocation] = useState<Location | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+
+  // Get tours linked to a location by matching location name in tour's location field
+  const getLinkedTours = (location: Location): Tour[] => {
+    const locationName = location.name.toLowerCase();
+    return tours.filter(tour => {
+      const tourLocation = tour.location.toLowerCase();
+      return tourLocation.includes(locationName) || 
+             locationName.includes(tourLocation.split('→').pop()?.trim() || '') ||
+             tourLocation.includes(location.address.split(',')[0].toLowerCase());
+    });
+  };
+
+  const linkedToursForDetail = useMemo(() => {
+    if (!detailLocation) return [];
+    return getLinkedTours(detailLocation);
+  }, [detailLocation, tours]);
+
+  const galleryImages = useMemo(() => 
+    locations.map(loc => ({
+      src: loc.image,
+      alt: loc.name,
+      title: loc.name,
+    })), [locations]);
 
   const handleAdd = () => {
     setEditingLocation(null);
@@ -25,6 +55,15 @@ const Locations = () => {
   const handleEdit = (location: Location) => {
     setEditingLocation(location);
     setDialogOpen(true);
+  };
+
+  const handleLocationClick = (location: Location) => {
+    setDetailLocation(location);
+  };
+
+  const openGallery = (index: number = 0) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
   };
 
   const handleSubmit = (data: Omit<Location, 'id'>) => {
@@ -69,10 +108,16 @@ const Locations = () => {
             <h1 className="text-2xl font-bold text-foreground">Locations</h1>
             <p className="text-muted-foreground">Manage tour destinations and coordinates</p>
           </div>
-          <Button onClick={handleAdd}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Location
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => openGallery()}>
+              <Images className="h-4 w-4 mr-2" />
+              Gallery
+            </Button>
+            <Button onClick={handleAdd}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Location
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -108,7 +153,7 @@ const Locations = () => {
 
         <LocationsMap 
           locations={locations} 
-          onLocationClick={(location) => handleEdit(location)}
+          onLocationClick={handleLocationClick}
         />
 
         <Card>
@@ -131,14 +176,17 @@ const Locations = () => {
                 {locations.map((location) => (
                   <TableRow key={location.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
+                      <div 
+                        className="flex items-center gap-3 cursor-pointer hover:opacity-80"
+                        onClick={() => handleLocationClick(location)}
+                      >
                         <img
                           src={location.image}
                           alt={location.name}
                           className="h-10 w-10 rounded-lg object-cover"
                         />
                         <div>
-                          <div className="font-medium">{location.name}</div>
+                          <div className="font-medium text-primary hover:underline">{location.name}</div>
                           <div className="text-sm text-muted-foreground line-clamp-1 max-w-[200px]">
                             {location.description}
                           </div>
@@ -209,6 +257,21 @@ const Locations = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <LocationDetailDialog
+        open={!!detailLocation}
+        onOpenChange={(open) => !open && setDetailLocation(null)}
+        location={detailLocation}
+        linkedTours={linkedToursForDetail}
+        allLocations={locations}
+      />
+
+      <ImageGallery
+        images={galleryImages}
+        initialIndex={galleryIndex}
+        open={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+      />
     </DashboardLayout>
   );
 };
