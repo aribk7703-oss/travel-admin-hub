@@ -1,11 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Location } from '@/hooks/useLocations';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Key } from 'lucide-react';
+import { MapPin, Key, Search, Filter, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Toggle } from '@/components/ui/toggle';
 
 interface LocationsMapProps {
   locations: Location[];
@@ -13,6 +28,16 @@ interface LocationsMapProps {
 }
 
 const MAPBOX_TOKEN_KEY = 'mapbox_public_token';
+
+const LOCATION_TYPES = ['caves', 'temples', 'heritage', 'forts'] as const;
+type LocationType = typeof LOCATION_TYPES[number];
+
+const TYPE_COLORS: Record<LocationType, string> = {
+  caves: 'hsl(220, 70%, 50%)',
+  temples: 'hsl(340, 70%, 50%)',
+  heritage: 'hsl(45, 80%, 45%)',
+  forts: 'hsl(160, 60%, 40%)',
+};
 
 const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -23,6 +48,9 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
     localStorage.getItem(MAPBOX_TOKEN_KEY) || ''
   );
   const [tokenInput, setTokenInput] = useState('');
+  const [activeFilters, setActiveFilters] = useState<Set<LocationType>>(new Set(LOCATION_TYPES));
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [mapError, setMapError] = useState<string | null>(null);
 
   const saveToken = () => {
@@ -38,8 +66,59 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
     setAccessToken('');
     setTokenInput('');
     map.current?.remove();
-    map.current = null;
   };
+
+  const toggleFilter = (type: LocationType) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(type)) {
+        next.delete(type);
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  };
+
+  const filteredLocations = useMemo(() => {
+    return locations.filter(loc => activeFilters.has(loc.type as LocationType));
+  }, [locations, activeFilters]);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return locations;
+    return locations.filter(loc => 
+      loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loc.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [locations, searchQuery]);
+
+  const flyToLocation = (location: Location) => {
+    if (map.current) {
+      map.current.flyTo({
+        center: [location.coordinates.lng, location.coordinates.lat],
+        zoom: 14,
+        pitch: 45,
+        duration: 2000,
+      });
+      setSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  // Update markers when filters change
+  useEffect(() => {
+    if (!map.current) return;
+    
+    // Update marker visibility based on filters
+    markersRef.current.forEach((marker, index) => {
+      const location = locations[index];
+      if (location) {
+        const element = marker.getElement();
+        const isVisible = activeFilters.has(location.type as LocationType);
+        element.style.display = isVisible ? 'flex' : 'none';
+      }
+    });
+  }, [activeFilters, locations]);
 
   useEffect(() => {
     if (!mapContainer.current || !accessToken) return;
@@ -74,12 +153,14 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
       // Add markers for each location
       map.current.on('load', () => {
         locations.forEach((location) => {
+          const typeColor = TYPE_COLORS[location.type as LocationType] || 'hsl(var(--primary))';
           const el = document.createElement('div');
           el.className = 'location-marker';
+          el.dataset.type = location.type;
           el.style.cssText = `
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%);
+            background: ${typeColor};
             border-radius: 50%;
             border: 3px solid white;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -104,7 +185,7 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
                 <img src="${location.image}" alt="${location.name}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" />
                 <h3 style="font-weight: 600; margin: 0 0 4px 0; font-size: 14px;">${location.name}</h3>
                 <p style="font-size: 12px; color: #666; margin: 0; line-height: 1.4;">${location.description.slice(0, 80)}...</p>
-                <span style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: #f0f0f0; border-radius: 12px; font-size: 11px; text-transform: capitalize;">${location.type}</span>
+                <span style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: ${typeColor}22; color: ${typeColor}; border-radius: 12px; font-size: 11px; text-transform: capitalize; font-weight: 500;">${location.type}</span>
               </div>
             `);
 
@@ -202,14 +283,80 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
             Location Map
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={clearToken}>
-            Change Token
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Search */}
+            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Search className="h-4 w-4" />
+                  Search
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="end">
+                <Command>
+                  <CommandInput 
+                    placeholder="Search locations..." 
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No locations found.</CommandEmpty>
+                    <CommandGroup heading="Locations">
+                      {searchResults.map((location) => (
+                        <CommandItem
+                          key={location.id}
+                          value={location.name}
+                          onSelect={() => flyToLocation(location)}
+                          className="cursor-pointer"
+                        >
+                          <MapPin className="mr-2 h-4 w-4" style={{ color: TYPE_COLORS[location.type as LocationType] }} />
+                          <div className="flex flex-col">
+                            <span>{location.name}</span>
+                            <span className="text-xs text-muted-foreground capitalize">{location.type}</span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            
+            <Button variant="ghost" size="sm" onClick={clearToken}>
+              Change Token
+            </Button>
+          </div>
+        </div>
+        
+        {/* Filter toggles */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          {LOCATION_TYPES.map((type) => (
+            <Toggle
+              key={type}
+              pressed={activeFilters.has(type)}
+              onPressedChange={() => toggleFilter(type)}
+              size="sm"
+              className="capitalize data-[state=on]:text-white gap-1.5"
+              style={{
+                backgroundColor: activeFilters.has(type) ? TYPE_COLORS[type] : undefined,
+              }}
+            >
+              <span 
+                className="w-2 h-2 rounded-full" 
+                style={{ backgroundColor: activeFilters.has(type) ? 'white' : TYPE_COLORS[type] }}
+              />
+              {type}
+            </Toggle>
+          ))}
+          <Badge variant="secondary" className="ml-auto">
+            {filteredLocations.length} of {locations.length} shown
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="p-0">
