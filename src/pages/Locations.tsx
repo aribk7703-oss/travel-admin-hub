@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, CheckCircle } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle } from 'lucide-react';
 import { useLocations, Location } from '@/hooks/useLocations';
 import { LocationFormDialog } from '@/components/dashboard/LocationFormDialog';
+import LocationsMap from '@/components/dashboard/LocationsMap';
 
 const Locations = () => {
   const { locations, addLocation, updateLocation, deleteLocation, stats } = useLocations();
@@ -104,6 +105,11 @@ const Locations = () => {
             variant="cyan"
           />
         </div>
+
+        <LocationsMap 
+          locations={locations} 
+          onLocationClick={(location) => handleEdit(location)}
+        />
 
         <Card>
           <CardHeader>
