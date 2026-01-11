@@ -5,7 +5,7 @@ import { Location } from '@/hooks/useLocations';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Key, Search, Filter, X } from 'lucide-react';
+import { MapPin, Key, Search, Filter, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Command,
@@ -33,10 +33,10 @@ const LOCATION_TYPES = ['caves', 'temples', 'heritage', 'forts'] as const;
 type LocationType = typeof LOCATION_TYPES[number];
 
 const TYPE_COLORS: Record<LocationType, string> = {
-  caves: 'hsl(220, 70%, 50%)',
-  temples: 'hsl(340, 70%, 50%)',
-  heritage: 'hsl(45, 80%, 45%)',
-  forts: 'hsl(160, 60%, 40%)',
+  caves: '#3b82f6',
+  temples: '#ec4899',
+  heritage: '#f59e0b',
+  forts: '#10b981',
 };
 
 const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick }) => {
@@ -52,6 +52,7 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mapError, setMapError] = useState<string | null>(null);
+  const [clusteringEnabled, setClusteringEnabled] = useState(true);
 
   const saveToken = () => {
     if (tokenInput.trim()) {
@@ -105,20 +106,33 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
     }
   };
 
-  // Update markers when filters change
+  // Create GeoJSON data from locations
+  const geojsonData = useMemo(() => ({
+    type: 'FeatureCollection' as const,
+    features: filteredLocations.map(loc => ({
+      type: 'Feature' as const,
+      properties: {
+        id: loc.id,
+        name: loc.name,
+        description: loc.description,
+        type: loc.type,
+        image: loc.image,
+        color: TYPE_COLORS[loc.type as LocationType] || '#6366f1',
+      },
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [loc.coordinates.lng, loc.coordinates.lat],
+      },
+    })),
+  }), [filteredLocations]);
+
+  // Update source data when filters change
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !map.current.getSource('locations')) return;
     
-    // Update marker visibility based on filters
-    markersRef.current.forEach((marker, index) => {
-      const location = locations[index];
-      if (location) {
-        const element = marker.getElement();
-        const isVisible = activeFilters.has(location.type as LocationType);
-        element.style.display = isVisible ? 'flex' : 'none';
-      }
-    });
-  }, [activeFilters, locations]);
+    const source = map.current.getSource('locations') as mapboxgl.GeoJSONSource;
+    source.setData(geojsonData);
+  }, [geojsonData]);
 
   useEffect(() => {
     if (!mapContainer.current || !accessToken) return;
@@ -150,55 +164,132 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
         setMapError('Invalid Mapbox token. Please check your token and try again.');
       });
 
-      // Add markers for each location
       map.current.on('load', () => {
-        locations.forEach((location) => {
-          const typeColor = TYPE_COLORS[location.type as LocationType] || 'hsl(var(--primary))';
-          const el = document.createElement('div');
-          el.className = 'location-marker';
-          el.dataset.type = location.type;
-          el.style.cssText = `
-            width: 32px;
-            height: 32px;
-            background: ${typeColor};
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-          `;
-          el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
-          
-          el.addEventListener('mouseenter', () => {
-            el.style.transform = 'scale(1.2)';
-          });
-          el.addEventListener('mouseleave', () => {
-            el.style.transform = 'scale(1)';
-          });
+        if (!map.current) return;
 
-          const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+        // Add GeoJSON source with clustering
+        map.current.addSource('locations', {
+          type: 'geojson',
+          data: geojsonData,
+          cluster: clusteringEnabled,
+          clusterMaxZoom: 14,
+          clusterRadius: 50,
+        });
+
+        // Cluster circles layer
+        map.current.addLayer({
+          id: 'clusters',
+          type: 'circle',
+          source: 'locations',
+          filter: ['has', 'point_count'],
+          paint: {
+            'circle-color': [
+              'step',
+              ['get', 'point_count'],
+              '#6366f1',
+              5, '#8b5cf6',
+              10, '#a855f7',
+              20, '#c026d3',
+            ],
+            'circle-radius': [
+              'step',
+              ['get', 'point_count'],
+              20,
+              5, 25,
+              10, 30,
+              20, 35,
+            ],
+            'circle-stroke-width': 3,
+            'circle-stroke-color': '#ffffff',
+          },
+        });
+
+        // Cluster count labels
+        map.current.addLayer({
+          id: 'cluster-count',
+          type: 'symbol',
+          source: 'locations',
+          filter: ['has', 'point_count'],
+          layout: {
+            'text-field': '{point_count_abbreviated}',
+            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+            'text-size': 14,
+          },
+          paint: {
+            'text-color': '#ffffff',
+          },
+        });
+
+        // Individual location points
+        map.current.addLayer({
+          id: 'unclustered-point',
+          type: 'circle',
+          source: 'locations',
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-color': ['get', 'color'],
+            'circle-radius': 10,
+            'circle-stroke-width': 3,
+            'circle-stroke-color': '#ffffff',
+          },
+        });
+
+        // Click on cluster to zoom in
+        map.current.on('click', 'clusters', (e) => {
+          if (!map.current) return;
+          const features = map.current.queryRenderedFeatures(e.point, {
+            layers: ['clusters'],
+          });
+          const clusterId = features[0]?.properties?.cluster_id;
+          const source = map.current.getSource('locations') as mapboxgl.GeoJSONSource;
+          
+          source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+            if (err || !map.current) return;
+
+            map.current.easeTo({
+              center: (features[0].geometry as GeoJSON.Point).coordinates as [number, number],
+              zoom: zoom,
+            });
+          });
+        });
+
+        // Click on individual point
+        map.current.on('click', 'unclustered-point', (e) => {
+          if (!e.features?.[0]) return;
+          const props = e.features[0].properties;
+          const coords = (e.features[0].geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+
+          const location = locations.find(l => l.id === props?.id);
+          if (location) {
+            onLocationClick?.(location);
+          }
+
+          // Show popup
+          new mapboxgl.Popup({ offset: 15, closeButton: false })
+            .setLngLat(coords)
             .setHTML(`
               <div style="padding: 8px; min-width: 200px;">
-                <img src="${location.image}" alt="${location.name}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" />
-                <h3 style="font-weight: 600; margin: 0 0 4px 0; font-size: 14px;">${location.name}</h3>
-                <p style="font-size: 12px; color: #666; margin: 0; line-height: 1.4;">${location.description.slice(0, 80)}...</p>
-                <span style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: ${typeColor}22; color: ${typeColor}; border-radius: 12px; font-size: 11px; text-transform: capitalize; font-weight: 500;">${location.type}</span>
+                <img src="${props?.image}" alt="${props?.name}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" />
+                <h3 style="font-weight: 600; margin: 0 0 4px 0; font-size: 14px;">${props?.name}</h3>
+                <p style="font-size: 12px; color: #666; margin: 0; line-height: 1.4;">${props?.description?.slice(0, 80)}...</p>
+                <span style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: ${props?.color}22; color: ${props?.color}; border-radius: 12px; font-size: 11px; text-transform: capitalize; font-weight: 500;">${props?.type}</span>
               </div>
-            `);
-
-          const marker = new mapboxgl.Marker(el)
-            .setLngLat([location.coordinates.lng, location.coordinates.lat])
-            .setPopup(popup)
+            `)
             .addTo(map.current!);
+        });
 
-          el.addEventListener('click', () => {
-            onLocationClick?.(location);
-          });
-
-          markersRef.current.push(marker);
+        // Cursor changes
+        map.current.on('mouseenter', 'clusters', () => {
+          if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+        });
+        map.current.on('mouseleave', 'clusters', () => {
+          if (map.current) map.current.getCanvas().style.cursor = '';
+        });
+        map.current.on('mouseenter', 'unclustered-point', () => {
+          if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+        });
+        map.current.on('mouseleave', 'unclustered-point', () => {
+          if (map.current) map.current.getCanvas().style.cursor = '';
         });
 
         // Fit bounds to show all markers
@@ -221,7 +312,7 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
       map.current?.remove();
       map.current = null;
     };
-  }, [accessToken, locations, onLocationClick]);
+  }, [accessToken, locations, onLocationClick, clusteringEnabled]);
 
   if (!accessToken) {
     return (
@@ -289,6 +380,18 @@ const LocationsMap: React.FC<LocationsMapProps> = ({ locations, onLocationClick 
             Location Map
           </CardTitle>
           <div className="flex items-center gap-2">
+            {/* Clustering Toggle */}
+            <Toggle
+              pressed={clusteringEnabled}
+              onPressedChange={setClusteringEnabled}
+              size="sm"
+              className="gap-1.5"
+              aria-label="Toggle clustering"
+            >
+              <Layers className="h-4 w-4" />
+              Clustering
+            </Toggle>
+            
             {/* Search */}
             <Popover open={searchOpen} onOpenChange={setSearchOpen}>
               <PopoverTrigger asChild>
