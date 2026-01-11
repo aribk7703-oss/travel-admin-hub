@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, MapPin, Clock, Map } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus } from "lucide-react";
 import { useTours, Tour } from "@/hooks/useTours";
 import { TourFormDialog } from "@/components/dashboard/TourFormDialog";
+import TourBookingDialog from "@/components/dashboard/TourBookingDialog";
 
 const Tours = () => {
   const { tours, addTour, updateTour, deleteTour, stats } = useTours();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [bookingTour, setBookingTour] = useState<Tour | null>(null);
 
   const handleAdd = () => {
     setEditingTour(null);
@@ -151,6 +153,15 @@ const Tours = () => {
                     <TableCell>{getStatusBadge(tour.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setBookingTour(tour)}
+                          className="gap-1"
+                        >
+                          <CalendarPlus className="h-4 w-4" />
+                          Book
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(tour)}>
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -172,6 +183,12 @@ const Tours = () => {
         onOpenChange={setIsFormOpen}
         tour={editingTour}
         onSubmit={handleSubmit}
+      />
+
+      <TourBookingDialog
+        open={!!bookingTour}
+        onOpenChange={(open) => !open && setBookingTour(null)}
+        tour={bookingTour}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
