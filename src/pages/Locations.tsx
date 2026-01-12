@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { LocationDetailDialog } from '@/components/dashboard/LocationDetailDialo
 import { ImageGallery } from '@/components/dashboard/ImageGallery';
 
 const Locations = () => {
+  const navigate = useNavigate();
   const { locations, addLocation, updateLocation, deleteLocation, stats } = useLocations();
   const { tours } = useTours();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -48,11 +50,14 @@ const Locations = () => {
     })), [locations]);
 
   const handleAdd = () => {
-    setEditingLocation(null);
-    setDialogOpen(true);
+    navigate("/locations/add");
   };
 
   const handleEdit = (location: Location) => {
+    navigate(`/locations/edit/${location.id}`);
+  };
+
+  const handleQuickEdit = (location: Location) => {
     setEditingLocation(location);
     setDialogOpen(true);
   };

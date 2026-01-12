@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,11 @@ interface Inclusion {
 
 const AddTour = () => {
   const navigate = useNavigate();
-  const { addTour } = useTours();
+  const { id } = useParams();
+  const { addTour, updateTour, getTourById } = useTours();
   const { locations } = useLocations();
+  const isEditMode = !!id;
+  const existingTour = isEditMode ? getTourById(Number(id)) : null;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -55,6 +58,27 @@ const AddTour = () => {
   const [itinerary, setItinerary] = useState<Itinerary[]>([]);
   const [inclusions, setInclusions] = useState<Inclusion[]>([]);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+  // Load existing tour data for edit mode
+  useEffect(() => {
+    if (existingTour) {
+      const priceNum = existingTour.price.replace(/[₹,]/g, '');
+      setFormData({
+        name: existingTour.name,
+        description: existingTour.description,
+        location: existingTour.location,
+        duration: existingTour.duration,
+        price: priceNum,
+        status: existingTour.status,
+        image: existingTour.image,
+        category: "",
+        maxGuests: "",
+        minGuests: "",
+        startTime: "",
+        meetingPoint: "",
+      });
+    }
+  }, [existingTour]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -131,7 +155,7 @@ const AddTour = () => {
       return;
     }
 
-    const newTour: Omit<Tour, "id"> = {
+    const tourData: Omit<Tour, "id"> = {
       name: formData.name,
       description: formData.description,
       location: formData.location,
@@ -141,8 +165,13 @@ const AddTour = () => {
       image: formData.image || "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=400",
     };
 
-    addTour(newTour);
-    toast.success("Tour added successfully!");
+    if (isEditMode && existingTour) {
+      updateTour(existingTour.id, tourData);
+      toast.success("Tour updated successfully!");
+    } else {
+      addTour(tourData);
+      toast.success("Tour added successfully!");
+    }
     navigate("/tours");
   };
 
@@ -161,16 +190,16 @@ const AddTour = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Add New Tour
+                {isEditMode ? "Edit Tour" : "Add New Tour"}
               </h1>
               <p className="text-muted-foreground">
-                Create a new tour package
+                {isEditMode ? "Update tour package details" : "Create a new tour package"}
               </p>
             </div>
           </div>
           <Button onClick={handleSubmit} className="gap-2">
             <Save className="h-4 w-4" />
-            Save Tour
+            {isEditMode ? "Update Tour" : "Save Tour"}
           </Button>
         </div>
 
