@@ -7,6 +7,9 @@ import Index from "./pages/Index";
 import Cars from "./pages/Cars";
 import Tours from "./pages/Tours";
 import Locations from "./pages/Locations";
+import AddLocation from "./pages/AddLocation";
+import AddTour from "./pages/AddTour";
+import AddCar from "./pages/AddCar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,8 +23,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/cars" element={<Cars />} />
+          <Route path="/cars/add" element={<AddCar />} />
           <Route path="/tours" element={<Tours />} />
+          <Route path="/tours/add" element={<AddTour />} />
           <Route path="/locations" element={<Locations />} />
+          <Route path="/locations/add" element={<AddLocation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
