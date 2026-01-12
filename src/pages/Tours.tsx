@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { TourFormDialog } from "@/components/dashboard/TourFormDialog";
 import TourBookingDialog from "@/components/dashboard/TourBookingDialog";
 
 const Tours = () => {
+  const navigate = useNavigate();
   const { tours, addTour, updateTour, deleteTour, stats } = useTours();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
@@ -18,11 +20,14 @@ const Tours = () => {
   const [bookingTour, setBookingTour] = useState<Tour | null>(null);
 
   const handleAdd = () => {
-    setEditingTour(null);
-    setIsFormOpen(true);
+    navigate("/tours/add");
   };
 
   const handleEdit = (tour: Tour) => {
+    navigate(`/tours/edit/${tour.id}`);
+  };
+
+  const handleQuickEdit = (tour: Tour) => {
     setEditingTour(tour);
     setIsFormOpen(true);
   };

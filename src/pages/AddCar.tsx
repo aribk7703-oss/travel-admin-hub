@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,10 @@ const defaultFeatures: VehicleFeature[] = [
 
 const AddCar = () => {
   const navigate = useNavigate();
-  const { addCar } = useCars();
+  const { id } = useParams();
+  const { addCar, updateCar, getCarById } = useCars();
+  const isEditMode = !!id;
+  const existingCar = isEditMode ? getCarById(Number(id)) : null;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -59,6 +62,29 @@ const AddCar = () => {
 
   const [features, setFeatures] = useState<VehicleFeature[]>(defaultFeatures);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+  // Load existing car data for edit mode
+  useEffect(() => {
+    if (existingCar) {
+      const priceNum = existingCar.pricePerKm?.replace(/[₹\/km,]/g, '') || '';
+      setFormData({
+        name: existingCar.name,
+        type: existingCar.type,
+        seats: existingCar.seats.toString(),
+        feature: existingCar.feature,
+        pricePerKm: priceNum,
+        status: existingCar.status,
+        image: existingCar.image,
+        description: "",
+        fuelType: "",
+        transmission: "",
+        year: "",
+        licensePlate: "",
+        driverName: "",
+        driverPhone: "",
+      });
+    }
+  }, [existingCar]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -110,7 +136,7 @@ const AddCar = () => {
       .map((f) => f.name)
       .join(", ");
 
-    const newCar: Omit<Car, "id"> = {
+    const carData: Omit<Car, "id"> = {
       name: formData.name,
       type: formData.type,
       seats: parseInt(formData.seats) || 4,
@@ -120,8 +146,13 @@ const AddCar = () => {
       image: formData.image || "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400",
     };
 
-    addCar(newCar);
-    toast.success("Vehicle added successfully!");
+    if (isEditMode && existingCar) {
+      updateCar(existingCar.id, carData);
+      toast.success("Vehicle updated successfully!");
+    } else {
+      addCar(carData);
+      toast.success("Vehicle added successfully!");
+    }
     navigate("/cars");
   };
 
@@ -140,16 +171,16 @@ const AddCar = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Add New Vehicle
+                {isEditMode ? "Edit Vehicle" : "Add New Vehicle"}
               </h1>
               <p className="text-muted-foreground">
-                Add a new car to your fleet
+                {isEditMode ? "Update vehicle details" : "Add a new car to your fleet"}
               </p>
             </div>
           </div>
           <Button onClick={handleSubmit} className="gap-2">
             <Save className="h-4 w-4" />
-            Save Vehicle
+            {isEditMode ? "Update Vehicle" : "Save Vehicle"}
           </Button>
         </div>
 

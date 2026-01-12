@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,10 +41,19 @@ const getStatusBadge = (status: Car["status"]) => {
 };
 
 const Cars = () => {
+  const navigate = useNavigate();
   const { cars, addCar, updateCar, deleteCar, stats } = useCars();
   const [formOpen, setFormOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleAddNew = () => {
+    navigate("/cars/add");
+  };
+
+  const handleEditCar = (car: Car) => {
+    navigate(`/cars/edit/${car.id}`);
+  };
 
   const handleAdd = (car: Omit<Car, "id">) => {
     addCar(car);
@@ -79,7 +89,7 @@ const Cars = () => {
               Manage your fleet of vehicles for tour bookings
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90" onClick={() => setFormOpen(true)}>
+          <Button className="bg-primary hover:bg-primary/90" onClick={handleAddNew}>
             <Plus className="h-4 w-4 mr-2" />
             Add New Car
           </Button>
@@ -168,7 +178,7 @@ const Cars = () => {
                           size="sm"
                           variant="ghost"
                           className="h-8 w-8 p-0"
-                          onClick={() => setEditingCar(car)}
+                          onClick={() => handleEditCar(car)}
                         >
                           <Edit className="h-4 w-4 text-muted-foreground" />
                         </Button>

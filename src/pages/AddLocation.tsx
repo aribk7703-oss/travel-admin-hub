@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,10 @@ interface GeneralInfo {
 
 const AddLocation = () => {
   const navigate = useNavigate();
-  const { addLocation, locations } = useLocations();
+  const { id } = useParams();
+  const { addLocation, updateLocation, getLocationById, locations } = useLocations();
+  const isEditMode = !!id;
+  const existingLocation = isEditMode ? getLocationById(id) : null;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -52,6 +55,25 @@ const AddLocation = () => {
 
   const [tripIdeas, setTripIdeas] = useState<TripIdea[]>([]);
   const [generalInfo, setGeneralInfo] = useState<GeneralInfo[]>([]);
+
+  // Load existing location data for edit mode
+  useEffect(() => {
+    if (existingLocation) {
+      setFormData({
+        name: existingLocation.name,
+        parent: "",
+        description: existingLocation.description,
+        bannerImage: existingLocation.image,
+        lat: existingLocation.coordinates.lat.toString(),
+        lng: existingLocation.coordinates.lng.toString(),
+        address: existingLocation.address,
+        type: existingLocation.type,
+        status: existingLocation.status,
+        featureImage: existingLocation.image,
+        mapZoom: "8",
+      });
+    }
+  }, [existingLocation]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -110,7 +132,7 @@ const AddLocation = () => {
       return;
     }
 
-    const newLocation: Omit<Location, "id"> = {
+    const locationData: Omit<Location, "id"> = {
       name: formData.name,
       description: formData.description,
       coordinates: {
@@ -123,8 +145,13 @@ const AddLocation = () => {
       image: formData.featureImage || formData.bannerImage,
     };
 
-    addLocation(newLocation);
-    toast.success("Location added successfully!");
+    if (isEditMode && existingLocation) {
+      updateLocation(existingLocation.id, locationData);
+      toast.success("Location updated successfully!");
+    } else {
+      addLocation(locationData);
+      toast.success("Location added successfully!");
+    }
     navigate("/locations");
   };
 
@@ -143,16 +170,16 @@ const AddLocation = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Add New Location
+                {isEditMode ? "Edit Location" : "Add New Location"}
               </h1>
               <p className="text-muted-foreground">
-                Create a new tour destination
+                {isEditMode ? "Update destination details" : "Create a new tour destination"}
               </p>
             </div>
           </div>
           <Button onClick={handleSubmit} className="gap-2">
             <Save className="h-4 w-4" />
-            Save Location
+            {isEditMode ? "Update Location" : "Save Location"}
           </Button>
         </div>
 

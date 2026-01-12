@@ -24,10 +24,13 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/cars" element={<Cars />} />
           <Route path="/cars/add" element={<AddCar />} />
+          <Route path="/cars/edit/:id" element={<AddCar />} />
           <Route path="/tours" element={<Tours />} />
           <Route path="/tours/add" element={<AddTour />} />
+          <Route path="/tours/edit/:id" element={<AddTour />} />
           <Route path="/locations" element={<Locations />} />
           <Route path="/locations/add" element={<AddLocation />} />
+          <Route path="/locations/edit/:id" element={<AddLocation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
