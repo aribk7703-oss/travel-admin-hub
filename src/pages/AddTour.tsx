@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useTours, Tour } from "@/hooks/useTours";
 import { useLocations } from "@/hooks/useLocations";
+import { useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Plane, Image, Plus, Trash2, Clock, IndianRupee } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -37,6 +38,8 @@ const AddTour = () => {
   const { id } = useParams();
   const { addTour, updateTour, getTourById } = useTours();
   const { locations } = useLocations();
+  const { getCategoriesByType } = useCategories();
+  const tourCategories = getCategoriesByType("tour");
   const isEditMode = !!id;
   const existingTour = isEditMode ? getTourById(Number(id)) : null;
 
@@ -272,11 +275,11 @@ const AddTour = () => {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="heritage">Heritage & Culture</SelectItem>
-                      <SelectItem value="spiritual">Spiritual & Pilgrimage</SelectItem>
-                      <SelectItem value="adventure">Adventure</SelectItem>
-                      <SelectItem value="nature">Nature & Wildlife</SelectItem>
-                      <SelectItem value="city">City Tours</SelectItem>
+                      {tourCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCars, Car } from "@/hooks/useCars";
+import { useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Car as CarIcon, Image, Plus, Trash2, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -40,12 +41,15 @@ const AddCar = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { addCar, updateCar, getCarById } = useCars();
+  const { getCategoriesByType } = useCategories();
+  const carCategories = getCategoriesByType("car");
   const isEditMode = !!id;
   const existingCar = isEditMode ? getCarById(Number(id)) : null;
 
   const [formData, setFormData] = useState({
     name: "",
     type: "",
+    category: "",
     seats: "",
     feature: "",
     pricePerKm: "",
@@ -70,6 +74,7 @@ const AddCar = () => {
       setFormData({
         name: existingCar.name,
         type: existingCar.type,
+        category: "",
         seats: existingCar.seats.toString(),
         feature: existingCar.feature,
         pricePerKm: priceNum,
@@ -227,6 +232,27 @@ const AddCar = () => {
                         <SelectItem value="Traveller">Tempo Traveller</SelectItem>
                         <SelectItem value="Bus">Bus / Coach</SelectItem>
                         <SelectItem value="Luxury">Luxury</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) =>
+                        handleSelectChange("category", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {carCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
