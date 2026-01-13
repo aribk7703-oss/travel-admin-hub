@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLocations, Location } from "@/hooks/useLocations";
+import { useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
 import { ArrowLeft, Save, MapPin, Image, Plus, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -36,12 +37,15 @@ const AddLocation = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { addLocation, updateLocation, getLocationById, locations } = useLocations();
+  const { getCategoriesByType } = useCategories();
+  const locationCategories = getCategoriesByType("location");
   const isEditMode = !!id;
   const existingLocation = isEditMode ? getLocationById(id) : null;
 
   const [formData, setFormData] = useState({
     name: "",
     parent: "",
+    category: "",
     description: "",
     bannerImage: "",
     lat: "",
@@ -62,6 +66,7 @@ const AddLocation = () => {
       setFormData({
         name: existingLocation.name,
         parent: "",
+        category: "",
         description: existingLocation.description,
         bannerImage: existingLocation.image,
         lat: existingLocation.coordinates.lat.toString(),
@@ -204,6 +209,27 @@ const AddLocation = () => {
                     onChange={handleInputChange}
                     placeholder="Enter location name"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      handleSelectChange("category", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locationCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
