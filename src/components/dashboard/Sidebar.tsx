@@ -39,6 +39,7 @@ const navItems: NavItem[] = [
     children: [
       { title: "All Locations", href: "/locations" },
       { title: "Add Location", href: "/locations/add" },
+      { title: "Categories", href: "/locations/categories" },
     ],
   },
   {
@@ -56,6 +57,7 @@ const navItems: NavItem[] = [
     children: [
       { title: "All Cars", href: "/cars" },
       { title: "Add Car", href: "/cars/add" },
+      { title: "Categories", href: "/cars/categories" },
     ],
   },
   { title: "Coupon", icon: Ticket, href: "/coupons" },
