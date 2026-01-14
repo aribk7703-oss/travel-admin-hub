@@ -9,6 +9,7 @@ export interface Tour {
   price: string;
   status: 'active' | 'inactive' | 'upcoming';
   image: string;
+  category?: string;
 }
 
 const defaultTours: Tour[] = [

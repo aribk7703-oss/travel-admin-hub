@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, Images } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, Images, Tag } from 'lucide-react';
 import { useLocations, Location } from '@/hooks/useLocations';
+import { useCategories } from '@/hooks/useCategories';
 import { useTours, Tour } from '@/hooks/useTours';
 import { LocationFormDialog } from '@/components/dashboard/LocationFormDialog';
 import LocationsMap from '@/components/dashboard/LocationsMap';
@@ -19,6 +20,7 @@ const Locations = () => {
   const navigate = useNavigate();
   const { locations, addLocation, updateLocation, deleteLocation, stats } = useLocations();
   const { tours } = useTours();
+  const { getCategoryById } = useCategories();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -170,6 +172,7 @@ const Locations = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Location</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Coordinates</TableHead>
                   <TableHead>Address</TableHead>
@@ -197,6 +200,16 @@ const Locations = () => {
                           </div>
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {location.category ? (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {getCategoryById(location.category)?.name || 'Unknown'}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={getTypeBadgeColor(location.type)}>

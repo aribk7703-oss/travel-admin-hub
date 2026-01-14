@@ -9,6 +9,7 @@ export interface Car {
   pricePerKm: string;
   status: "active" | "inactive" | "maintenance";
   image: string;
+  category?: string;
 }
 
 const defaultCars: Car[] = [
