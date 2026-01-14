@@ -22,8 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Tag } from "lucide-react";
 import { useCars, type Car } from "@/hooks/useCars";
+import { useCategories } from "@/hooks/useCategories";
 import { CarFormDialog } from "@/components/dashboard/CarFormDialog";
 import { toast } from "sonner";
 
@@ -43,6 +44,7 @@ const getStatusBadge = (status: Car["status"]) => {
 const Cars = () => {
   const navigate = useNavigate();
   const { cars, addCar, updateCar, deleteCar, stats } = useCars();
+  const { getCategoryById } = useCategories();
   const [formOpen, setFormOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -133,6 +135,7 @@ const Cars = () => {
               <TableHeader>
                 <TableRow className="border-border">
                   <TableHead className="text-muted-foreground">Vehicle</TableHead>
+                  <TableHead className="text-muted-foreground">Category</TableHead>
                   <TableHead className="text-muted-foreground">Type</TableHead>
                   <TableHead className="text-muted-foreground">Capacity</TableHead>
                   <TableHead className="text-muted-foreground">Feature</TableHead>
@@ -153,6 +156,16 @@ const Cars = () => {
                         />
                         <span className="font-medium text-foreground">{car.name}</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {car.category ? (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {getCategoryById(car.category)?.name || 'Unknown'}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="border-border text-muted-foreground">

@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus, Tag } from "lucide-react";
 import { useTours, Tour } from "@/hooks/useTours";
+import { useCategories } from "@/hooks/useCategories";
 import { TourFormDialog } from "@/components/dashboard/TourFormDialog";
 import TourBookingDialog from "@/components/dashboard/TourBookingDialog";
 
 const Tours = () => {
   const navigate = useNavigate();
   const { tours, addTour, updateTour, deleteTour, stats } = useTours();
+  const { getCategoryById } = useCategories();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -119,6 +121,7 @@ const Tours = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Tour</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Price</TableHead>
@@ -141,6 +144,16 @@ const Tours = () => {
                           <div className="text-sm text-muted-foreground line-clamp-1">{tour.description}</div>
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {tour.category ? (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {getCategoryById(tour.category)?.name || 'Unknown'}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">

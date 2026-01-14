@@ -12,6 +12,7 @@ export interface Location {
   type: 'heritage' | 'temple' | 'city' | 'fort' | 'cave';
   status: 'active' | 'inactive';
   image: string;
+  category?: string;
 }
 
 const defaultLocations: Location[] = [
