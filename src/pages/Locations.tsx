@@ -15,18 +15,29 @@ import { LocationFormDialog } from '@/components/dashboard/LocationFormDialog';
 import LocationsMap from '@/components/dashboard/LocationsMap';
 import { LocationDetailDialog } from '@/components/dashboard/LocationDetailDialog';
 import { ImageGallery } from '@/components/dashboard/ImageGallery';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Filter } from 'lucide-react';
 
 const Locations = () => {
   const navigate = useNavigate();
   const { locations, addLocation, updateLocation, deleteLocation, stats } = useLocations();
   const { tours } = useTours();
-  const { getCategoryById } = useCategories();
+  const { getCategoryById, getCategoriesByType } = useCategories();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailLocation, setDetailLocation] = useState<Location | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+
+  const locationCategories = getCategoriesByType('location');
+  
+  const filteredLocations = useMemo(() => {
+    if (categoryFilter === "all") return locations;
+    if (categoryFilter === "none") return locations.filter(l => !l.category);
+    return locations.filter(l => l.category === categoryFilter);
+  }, [locations, categoryFilter]);
 
   // Get tours linked to a location by matching location name in tour's location field
   const getLinkedTours = (location: Location): Tour[] => {
@@ -164,8 +175,23 @@ const Locations = () => {
         />
 
         <Card>
-          <CardHeader>
-            <CardTitle>All Locations</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle>All Locations ({filteredLocations.length})</CardTitle>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {locationCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -181,7 +207,7 @@ const Locations = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {locations.map((location) => (
+                {filteredLocations.map((location) => (
                   <TableRow key={location.id}>
                     <TableCell>
                       <div 
