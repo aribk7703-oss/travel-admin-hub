@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus, Tag } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus, Tag, Filter } from "lucide-react";
 import { useTours, Tour } from "@/hooks/useTours";
 import { useCategories } from "@/hooks/useCategories";
 import { TourFormDialog } from "@/components/dashboard/TourFormDialog";
@@ -15,11 +16,20 @@ import TourBookingDialog from "@/components/dashboard/TourBookingDialog";
 const Tours = () => {
   const navigate = useNavigate();
   const { tours, addTour, updateTour, deleteTour, stats } = useTours();
-  const { getCategoryById } = useCategories();
+  const { getCategoryById, getCategoriesByType } = useCategories();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [bookingTour, setBookingTour] = useState<Tour | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+
+  const tourCategories = getCategoriesByType('tour');
+  
+  const filteredTours = useMemo(() => {
+    if (categoryFilter === "all") return tours;
+    if (categoryFilter === "none") return tours.filter(t => !t.category);
+    return tours.filter(t => t.category === categoryFilter);
+  }, [tours, categoryFilter]);
 
   const handleAdd = () => {
     navigate("/tours/add");
@@ -110,11 +120,26 @@ const Tours = () => {
 
         {/* Tours Table */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center gap-2">
               <Map className="h-5 w-5" />
-              All Tours ({tours.length})
+              All Tours ({filteredTours.length})
             </CardTitle>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {tourCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -130,7 +155,7 @@ const Tours = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tours.map((tour) => (
+                {filteredTours.map((tour) => (
                   <TableRow key={tour.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">

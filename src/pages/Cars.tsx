@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Users, Tag } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, Users, Tag, Filter } from "lucide-react";
 import { useCars, type Car } from "@/hooks/useCars";
 import { useCategories } from "@/hooks/useCategories";
 import { CarFormDialog } from "@/components/dashboard/CarFormDialog";
@@ -44,10 +45,19 @@ const getStatusBadge = (status: Car["status"]) => {
 const Cars = () => {
   const navigate = useNavigate();
   const { cars, addCar, updateCar, deleteCar, stats } = useCars();
-  const { getCategoryById } = useCategories();
+  const { getCategoryById, getCategoriesByType } = useCategories();
   const [formOpen, setFormOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+
+  const carCategories = getCategoriesByType('car');
+  
+  const filteredCars = useMemo(() => {
+    if (categoryFilter === "all") return cars;
+    if (categoryFilter === "none") return cars.filter(c => !c.category);
+    return cars.filter(c => c.category === categoryFilter);
+  }, [cars, categoryFilter]);
 
   const handleAddNew = () => {
     navigate("/cars/add");
@@ -127,8 +137,23 @@ const Cars = () => {
 
         {/* Cars Table */}
         <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-foreground">Fleet Inventory</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-foreground">Fleet Inventory ({filteredCars.length})</CardTitle>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {carCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -145,7 +170,7 @@ const Cars = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cars.map((car) => (
+                {filteredCars.map((car) => (
                   <TableRow key={car.id} className="border-border">
                     <TableCell>
                       <div className="flex items-center gap-3">
