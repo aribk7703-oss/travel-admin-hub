@@ -22,14 +22,27 @@ const Tours = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [bookingTour, setBookingTour] = useState<Tour | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const tourCategories = getCategoriesByType('tour');
   
   const filteredTours = useMemo(() => {
-    if (categoryFilter === "all") return tours;
-    if (categoryFilter === "none") return tours.filter(t => !t.category);
-    return tours.filter(t => t.category === categoryFilter);
-  }, [tours, categoryFilter]);
+    let result = tours;
+    
+    // Filter by category
+    if (categoryFilter === "none") {
+      result = result.filter(t => !t.category);
+    } else if (categoryFilter !== "all") {
+      result = result.filter(t => t.category === categoryFilter);
+    }
+    
+    // Filter by status
+    if (statusFilter !== "all") {
+      result = result.filter(t => t.status === statusFilter);
+    }
+    
+    return result;
+  }, [tours, categoryFilter, statusFilter]);
 
   const handleAdd = () => {
     navigate("/tours/add");
@@ -127,6 +140,17 @@ const Tours = () => {
             </CardTitle>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by category" />

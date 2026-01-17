@@ -50,14 +50,27 @@ const Cars = () => {
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const carCategories = getCategoriesByType('car');
   
   const filteredCars = useMemo(() => {
-    if (categoryFilter === "all") return cars;
-    if (categoryFilter === "none") return cars.filter(c => !c.category);
-    return cars.filter(c => c.category === categoryFilter);
-  }, [cars, categoryFilter]);
+    let result = cars;
+    
+    // Filter by category
+    if (categoryFilter === "none") {
+      result = result.filter(c => !c.category);
+    } else if (categoryFilter !== "all") {
+      result = result.filter(c => c.category === categoryFilter);
+    }
+    
+    // Filter by status
+    if (statusFilter !== "all") {
+      result = result.filter(c => c.status === statusFilter);
+    }
+    
+    return result;
+  }, [cars, categoryFilter, statusFilter]);
 
   const handleAddNew = () => {
     navigate("/cars/add");
@@ -141,6 +154,17 @@ const Cars = () => {
             <CardTitle className="text-foreground">Fleet Inventory ({filteredCars.length})</CardTitle>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by category" />
