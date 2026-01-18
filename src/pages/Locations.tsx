@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, Images, Tag, Filter } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, Images, Tag, Filter, Search } from 'lucide-react';
 import { useLocations, Location } from '@/hooks/useLocations';
 import { useCategories } from '@/hooks/useCategories';
 import { useTours, Tour } from '@/hooks/useTours';
@@ -17,6 +17,7 @@ import { LocationDetailDialog } from '@/components/dashboard/LocationDetailDialo
 import { ImageGallery } from '@/components/dashboard/ImageGallery';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 const Locations = () => {
@@ -36,11 +37,22 @@ const Locations = () => {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
   const [newBulkStatus, setNewBulkStatus] = useState<Location['status']>("active");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const locationCategories = getCategoriesByType('location');
   
   const filteredLocations = useMemo(() => {
     let result = locations;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(l => 
+        l.name.toLowerCase().includes(query) || 
+        l.description.toLowerCase().includes(query) ||
+        l.address.toLowerCase().includes(query)
+      );
+    }
     
     // Filter by category
     if (categoryFilter === "none") {
@@ -55,7 +67,7 @@ const Locations = () => {
     }
     
     return result;
-  }, [locations, categoryFilter, statusFilter]);
+  }, [locations, categoryFilter, statusFilter, searchQuery]);
 
   const allSelected = filteredLocations.length > 0 && selectedIds.length === filteredLocations.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < filteredLocations.length;
@@ -254,6 +266,15 @@ const Locations = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle>All Locations ({filteredLocations.length})</CardTitle>
             <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search locations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-[200px]"
+                />
+              </div>
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">

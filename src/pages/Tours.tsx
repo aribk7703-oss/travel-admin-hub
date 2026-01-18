@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus, Tag, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus, Tag, Filter, Search } from "lucide-react";
 import { useTours, Tour } from "@/hooks/useTours";
 import { useCategories } from "@/hooks/useCategories";
 import { TourFormDialog } from "@/components/dashboard/TourFormDialog";
@@ -28,12 +29,23 @@ const Tours = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [newBulkStatus, setNewBulkStatus] = useState<Tour['status']>("active");
 
   const tourCategories = getCategoriesByType('tour');
   
   const filteredTours = useMemo(() => {
     let result = tours;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(t => 
+        t.name.toLowerCase().includes(query) || 
+        t.description.toLowerCase().includes(query) ||
+        t.location.toLowerCase().includes(query)
+      );
+    }
     
     // Filter by category
     if (categoryFilter === "none") {
@@ -48,7 +60,7 @@ const Tours = () => {
     }
     
     return result;
-  }, [tours, categoryFilter, statusFilter]);
+  }, [tours, categoryFilter, statusFilter, searchQuery]);
 
   const allSelected = filteredTours.length > 0 && selectedIds.length === filteredTours.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < filteredTours.length;
@@ -204,6 +216,15 @@ const Tours = () => {
               All Tours ({filteredTours.length})
             </CardTitle>
             <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tours..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-[200px]"
+                />
+              </div>
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">

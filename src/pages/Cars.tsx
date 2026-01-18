@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Users, Tag, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Edit, Trash2, Users, Tag, Filter, Search } from "lucide-react";
 import { useCars, type Car } from "@/hooks/useCars";
 import { useCategories } from "@/hooks/useCategories";
 import { CarFormDialog } from "@/components/dashboard/CarFormDialog";
@@ -56,11 +57,22 @@ const Cars = () => {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
   const [newBulkStatus, setNewBulkStatus] = useState<Car['status']>("active");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const carCategories = getCategoriesByType('car');
   
   const filteredCars = useMemo(() => {
     let result = cars;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(query) || 
+        c.type.toLowerCase().includes(query) ||
+        c.feature.toLowerCase().includes(query)
+      );
+    }
     
     // Filter by category
     if (categoryFilter === "none") {
@@ -75,7 +87,7 @@ const Cars = () => {
     }
     
     return result;
-  }, [cars, categoryFilter, statusFilter]);
+  }, [cars, categoryFilter, statusFilter, searchQuery]);
 
   const allSelected = filteredCars.length > 0 && selectedIds.length === filteredCars.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < filteredCars.length;
@@ -217,6 +229,15 @@ const Cars = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-foreground">Fleet Inventory ({filteredCars.length})</CardTitle>
             <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search vehicles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-[200px]"
+                />
+              </div>
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
