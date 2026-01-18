@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Users, Tag, Filter } from "lucide-react";
 import { useCars, type Car } from "@/hooks/useCars";
 import { useCategories } from "@/hooks/useCategories";
@@ -51,6 +52,10 @@ const Cars = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
+  const [newBulkStatus, setNewBulkStatus] = useState<Car['status']>("active");
 
   const carCategories = getCategoriesByType('car');
   
@@ -71,6 +76,39 @@ const Cars = () => {
     
     return result;
   }, [cars, categoryFilter, statusFilter]);
+
+  const allSelected = filteredCars.length > 0 && selectedIds.length === filteredCars.length;
+  const someSelected = selectedIds.length > 0 && selectedIds.length < filteredCars.length;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredCars.map(c => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(i => i !== id));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    selectedIds.forEach(id => deleteCar(id));
+    toast.success(`${selectedIds.length} vehicle(s) deleted successfully!`);
+    setSelectedIds([]);
+    setBulkDeleteOpen(false);
+  };
+
+  const handleBulkStatusChange = () => {
+    selectedIds.forEach(id => updateCar(id, { status: newBulkStatus }));
+    toast.success(`${selectedIds.length} vehicle(s) updated to ${newBulkStatus}!`);
+    setSelectedIds([]);
+    setBulkStatusOpen(false);
+  };
 
   const handleAddNew = () => {
     navigate("/cars/add");
@@ -148,6 +186,32 @@ const Cars = () => {
           </Card>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-4 p-4 bg-muted rounded-lg border">
+            <span className="text-sm font-medium">{selectedIds.length} item(s) selected</span>
+            <div className="flex items-center gap-2 ml-auto">
+              <Select value={newBulkStatus} onValueChange={(v) => setNewBulkStatus(v as Car['status'])}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Change status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setBulkStatusOpen(true)}>
+                Change Status
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete Selected
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Cars Table */}
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -183,6 +247,14 @@ const Cars = () => {
             <Table>
               <TableHeader>
                 <TableRow className="border-border">
+                  <TableHead className="w-[50px]">
+                    <Checkbox 
+                      checked={allSelected} 
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                      {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                    />
+                  </TableHead>
                   <TableHead className="text-muted-foreground">Vehicle</TableHead>
                   <TableHead className="text-muted-foreground">Category</TableHead>
                   <TableHead className="text-muted-foreground">Type</TableHead>
@@ -195,7 +267,14 @@ const Cars = () => {
               </TableHeader>
               <TableBody>
                 {filteredCars.map((car) => (
-                  <TableRow key={car.id} className="border-border">
+                  <TableRow key={car.id} className="border-border" data-state={selectedIds.includes(car.id) ? "selected" : undefined}>
+                    <TableCell>
+                      <Checkbox 
+                        checked={selectedIds.includes(car.id)} 
+                        onCheckedChange={(checked) => handleSelectOne(car.id, !!checked)}
+                        aria-label={`Select ${car.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <img
@@ -292,6 +371,42 @@ const Cars = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.length} Vehicle(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected vehicles from your fleet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground">
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Status Change Confirmation */}
+      <AlertDialog open={bulkStatusOpen} onOpenChange={setBulkStatusOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Status of {selectedIds.length} Vehicle(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will change the status of all selected vehicles to "{newBulkStatus}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkStatusChange}>
+              Update Status
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

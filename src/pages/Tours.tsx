@@ -7,11 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, MapPin, Clock, Map, CalendarPlus, Tag, Filter } from "lucide-react";
 import { useTours, Tour } from "@/hooks/useTours";
 import { useCategories } from "@/hooks/useCategories";
 import { TourFormDialog } from "@/components/dashboard/TourFormDialog";
 import TourBookingDialog from "@/components/dashboard/TourBookingDialog";
+import { toast } from "sonner";
 
 const Tours = () => {
   const navigate = useNavigate();
@@ -23,6 +25,10 @@ const Tours = () => {
   const [bookingTour, setBookingTour] = useState<Tour | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
+  const [newBulkStatus, setNewBulkStatus] = useState<Tour['status']>("active");
 
   const tourCategories = getCategoriesByType('tour');
   
@@ -43,6 +49,39 @@ const Tours = () => {
     
     return result;
   }, [tours, categoryFilter, statusFilter]);
+
+  const allSelected = filteredTours.length > 0 && selectedIds.length === filteredTours.length;
+  const someSelected = selectedIds.length > 0 && selectedIds.length < filteredTours.length;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredTours.map(t => t.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(i => i !== id));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    selectedIds.forEach(id => deleteTour(id));
+    toast.success(`${selectedIds.length} tour(s) deleted successfully!`);
+    setSelectedIds([]);
+    setBulkDeleteOpen(false);
+  };
+
+  const handleBulkStatusChange = () => {
+    selectedIds.forEach(id => updateTour(id, { status: newBulkStatus }));
+    toast.success(`${selectedIds.length} tour(s) updated to ${newBulkStatus}!`);
+    setSelectedIds([]);
+    setBulkStatusOpen(false);
+  };
 
   const handleAdd = () => {
     navigate("/tours/add");
@@ -131,6 +170,32 @@ const Tours = () => {
           </Card>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-4 p-4 bg-muted rounded-lg border">
+            <span className="text-sm font-medium">{selectedIds.length} item(s) selected</span>
+            <div className="flex items-center gap-2 ml-auto">
+              <Select value={newBulkStatus} onValueChange={(v) => setNewBulkStatus(v as Tour['status'])}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Change status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setBulkStatusOpen(true)}>
+                Change Status
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete Selected
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Tours Table */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -169,6 +234,14 @@ const Tours = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox 
+                      checked={allSelected} 
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                      {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                    />
+                  </TableHead>
                   <TableHead>Tour</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Location</TableHead>
@@ -180,7 +253,14 @@ const Tours = () => {
               </TableHeader>
               <TableBody>
                 {filteredTours.map((tour) => (
-                  <TableRow key={tour.id}>
+                  <TableRow key={tour.id} data-state={selectedIds.includes(tour.id) ? "selected" : undefined}>
+                    <TableCell>
+                      <Checkbox 
+                        checked={selectedIds.includes(tour.id)} 
+                        onCheckedChange={(checked) => handleSelectOne(tour.id, !!checked)}
+                        aria-label={`Select ${tour.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <img
@@ -270,6 +350,42 @@ const Tours = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.length} Tour(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected tours from your list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground">
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Status Change Confirmation */}
+      <AlertDialog open={bulkStatusOpen} onOpenChange={setBulkStatusOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Status of {selectedIds.length} Tour(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will change the status of all selected tours to "{newBulkStatus}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkStatusChange}>
+              Update Status
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

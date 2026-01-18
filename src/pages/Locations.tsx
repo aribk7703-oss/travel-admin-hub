@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, Images, Tag } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, Mountain, Church, Landmark, Castle, Images, Tag, Filter } from 'lucide-react';
 import { useLocations, Location } from '@/hooks/useLocations';
 import { useCategories } from '@/hooks/useCategories';
 import { useTours, Tour } from '@/hooks/useTours';
@@ -16,7 +16,8 @@ import LocationsMap from '@/components/dashboard/LocationsMap';
 import { LocationDetailDialog } from '@/components/dashboard/LocationDetailDialog';
 import { ImageGallery } from '@/components/dashboard/ImageGallery';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Filter } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 const Locations = () => {
   const navigate = useNavigate();
@@ -31,6 +32,10 @@ const Locations = () => {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
+  const [newBulkStatus, setNewBulkStatus] = useState<Location['status']>("active");
 
   const locationCategories = getCategoriesByType('location');
   
@@ -51,6 +56,39 @@ const Locations = () => {
     
     return result;
   }, [locations, categoryFilter, statusFilter]);
+
+  const allSelected = filteredLocations.length > 0 && selectedIds.length === filteredLocations.length;
+  const someSelected = selectedIds.length > 0 && selectedIds.length < filteredLocations.length;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredLocations.map(l => l.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(i => i !== id));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    selectedIds.forEach(id => deleteLocation(id));
+    toast.success(`${selectedIds.length} location(s) deleted successfully!`);
+    setSelectedIds([]);
+    setBulkDeleteOpen(false);
+  };
+
+  const handleBulkStatusChange = () => {
+    selectedIds.forEach(id => updateLocation(id, { status: newBulkStatus }));
+    toast.success(`${selectedIds.length} location(s) updated to ${newBulkStatus}!`);
+    setSelectedIds([]);
+    setBulkStatusOpen(false);
+  };
 
   // Get tours linked to a location by matching location name in tour's location field
   const getLinkedTours = (location: Location): Tour[] => {
@@ -187,6 +225,31 @@ const Locations = () => {
           onLocationClick={handleLocationClick}
         />
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-4 p-4 bg-muted rounded-lg border">
+            <span className="text-sm font-medium">{selectedIds.length} item(s) selected</span>
+            <div className="flex items-center gap-2 ml-auto">
+              <Select value={newBulkStatus} onValueChange={(v) => setNewBulkStatus(v as Location['status'])}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Change status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setBulkStatusOpen(true)}>
+                Change Status
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete Selected
+              </Button>
+            </div>
+          </div>
+        )}
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle>All Locations ({filteredLocations.length})</CardTitle>
@@ -220,6 +283,14 @@ const Locations = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox 
+                      checked={allSelected} 
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                      {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                    />
+                  </TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Type</TableHead>
@@ -231,7 +302,14 @@ const Locations = () => {
               </TableHeader>
               <TableBody>
                 {filteredLocations.map((location) => (
-                  <TableRow key={location.id}>
+                  <TableRow key={location.id} data-state={selectedIds.includes(location.id) ? "selected" : undefined}>
+                    <TableCell>
+                      <Checkbox 
+                        checked={selectedIds.includes(location.id)} 
+                        onCheckedChange={(checked) => handleSelectOne(location.id, !!checked)}
+                        aria-label={`Select ${location.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div 
                         className="flex items-center gap-3 cursor-pointer hover:opacity-80"
@@ -320,6 +398,42 @@ const Locations = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.length} Location(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected locations from your list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground">
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Status Change Confirmation */}
+      <AlertDialog open={bulkStatusOpen} onOpenChange={setBulkStatusOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Status of {selectedIds.length} Location(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will change the status of all selected locations to "{newBulkStatus}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkStatusChange}>
+              Update Status
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
