@@ -12,6 +12,10 @@ import AddTour from "./pages/AddTour";
 import AddCar from "./pages/AddCar";
 import Categories from "./pages/Categories";
 import NotFound from "./pages/NotFound";
+import WebsiteHome from "./pages/website/WebsiteHome";
+import WebsiteTours from "./pages/website/WebsiteTours";
+import WebsiteDestinations from "./pages/website/WebsiteDestinations";
+import WebsiteFleet from "./pages/website/WebsiteFleet";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +40,11 @@ const App = () => (
           <Route path="/locations/edit/:id" element={<AddLocation />} />
           <Route path="/locations/categories" element={<Navigate to="/categories?type=location" replace />} />
           <Route path="/categories" element={<Categories />} />
+          {/* Public Website Routes */}
+          <Route path="/website" element={<WebsiteHome />} />
+          <Route path="/website/tours" element={<WebsiteTours />} />
+          <Route path="/website/destinations" element={<WebsiteDestinations />} />
+          <Route path="/website/fleet" element={<WebsiteFleet />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
