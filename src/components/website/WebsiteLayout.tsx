@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { MapPin, Phone, Mail, Car, Compass, Map, Home, Menu, X } from "lucide-react";
+import { MapPin, Phone, Mail, Car, Compass, Map, Home, Menu, X, Users, Briefcase } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -9,9 +9,12 @@ interface WebsiteLayoutProps {
 
 const navLinks = [
   { href: "/website", label: "Home", icon: Home },
+  { href: "/website/about", label: "About", icon: Users },
+  { href: "/website/services", label: "Services", icon: Briefcase },
   { href: "/website/tours", label: "Tours", icon: Compass },
   { href: "/website/destinations", label: "Destinations", icon: Map },
   { href: "/website/fleet", label: "Our Fleet", icon: Car },
+  { href: "/website/contact", label: "Contact", icon: Mail },
 ];
 
 export const WebsiteLayout = ({ children }: WebsiteLayoutProps) => {
