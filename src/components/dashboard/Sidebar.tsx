@@ -66,11 +66,11 @@ const navItems: NavItem[] = [
 
 const contentItems: NavItem[] = [
   {
-    title: "Blog",
+    title: "News",
     icon: Newspaper,
     children: [
-      { title: "All Posts", href: "/blog" },
-      { title: "Add Post", href: "/blog/add" },
+      { title: "All News", href: "/news" },
+      { title: "Add News", href: "/news/add" },
     ],
   },
   { title: "Page", icon: FileText, href: "/pages" },
