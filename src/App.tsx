@@ -12,6 +12,7 @@ import AddTour from "./pages/AddTour";
 import AddCar from "./pages/AddCar";
 import Categories from "./pages/Categories";
 import Blog from "./pages/Blog";
+import Pages from "./pages/Pages";
 import NotFound from "./pages/NotFound";
 import WebsiteHome from "./pages/website/WebsiteHome";
 import WebsiteAbout from "./pages/website/WebsiteAbout";
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/locations/categories" element={<Navigate to="/categories?type=location" replace />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/pages" element={<Pages />} />
           {/* Public Website Routes */}
           <Route path="/website" element={<WebsiteHome />} />
           <Route path="/website/about" element={<WebsiteAbout />} />
