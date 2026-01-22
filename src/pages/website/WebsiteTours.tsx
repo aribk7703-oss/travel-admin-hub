@@ -1,11 +1,13 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import { useTours } from "@/hooks/useTours";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Clock, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Clock, Search, ArrowRight } from "lucide-react";
 
 const WebsiteTours = () => {
   const { tours } = useTours();
@@ -84,28 +86,42 @@ const WebsiteTours = () => {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {activeTours.map((tour) => (
                 <Card key={tour.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
-                  <div className="aspect-video relative overflow-hidden">
-                    <img
-                      src={tour.image}
-                      alt={tour.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <Badge className="absolute top-3 right-3 bg-primary">
-                      {tour.price}
-                    </Badge>
-                  </div>
+                  <Link to={`/website/tours/${tour.id}`}>
+                    <div className="aspect-video relative overflow-hidden">
+                      <img
+                        src={tour.image}
+                        alt={tour.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <Badge className="absolute top-3 right-3 bg-primary">
+                        {tour.price}
+                      </Badge>
+                    </div>
+                  </Link>
                   <CardContent className="p-5">
-                    <h3 className="font-semibold text-lg text-foreground mb-2">{tour.name}</h3>
+                    <Link to={`/website/tours/${tour.id}`}>
+                      <h3 className="font-semibold text-lg text-foreground mb-2 hover:text-primary transition-colors">
+                        {tour.name}
+                      </h3>
+                    </Link>
                     <p className="text-sm text-muted-foreground mb-4">{tour.description}</p>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {tour.location}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {tour.duration}
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {tour.location}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {tour.duration}
+                        </span>
+                      </div>
+                      <Link to={`/website/tours/${tour.id}`}>
+                        <Button size="sm" variant="ghost" className="text-primary hover:text-primary">
+                          View Details
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
