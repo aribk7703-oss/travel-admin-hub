@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useMedia, formatFileSize, MediaFile } from "@/hooks/useMedia";
 import { useToast } from "@/hooks/use-toast";
+import { ImageEditorDialog } from "@/components/dashboard/ImageEditorDialog";
 import {
   Upload,
   Search,
@@ -30,12 +31,12 @@ import {
   FileVideo,
   FileAudio,
   File,
-  X,
   Download,
   Copy,
   Eye,
   Grid3X3,
   List,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +49,7 @@ const getFileIcon = (type: string) => {
 };
 
 const Media = () => {
-  const { files, isLoading, addFile, deleteFile, deleteMultiple } = useMedia();
+  const { files, isLoading, addFile, deleteFile, deleteMultiple, updateFile } = useMedia();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -58,23 +59,25 @@ const Media = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
 
   const filteredFiles = files.filter((file) =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFiles = e.target.files;
-    if (!uploadedFiles) return;
+  const processFiles = async (fileList: FileList | File[]) => {
+    const filesToUpload = Array.from(fileList);
+    if (filesToUpload.length === 0) return;
 
     setIsUploading(true);
     try {
-      for (const file of Array.from(uploadedFiles)) {
+      for (const file of filesToUpload) {
         await addFile(file);
       }
       toast({
         title: "Upload successful",
-        description: `${uploadedFiles.length} file(s) uploaded successfully.`,
+        description: `${filesToUpload.length} file(s) uploaded successfully.`,
       });
     } catch (error) {
       toast({
@@ -89,6 +92,44 @@ const Media = () => {
       }
     }
   };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFiles = e.target.files;
+    if (!uploadedFiles) return;
+    await processFiles(uploadedFiles);
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set dragging to false if we're leaving the drop zone entirely
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+      await processFiles(droppedFiles);
+    }
+  }, []);
 
   const handleSelectFile = (id: string) => {
     setSelectedFiles((prev) =>
@@ -131,9 +172,39 @@ const Media = () => {
     document.body.removeChild(link);
   };
 
+  const handleImageSave = (editedImageUrl: string) => {
+    if (editingFile) {
+      updateFile(editingFile.id, { url: editedImageUrl });
+      toast({
+        title: "Image saved",
+        description: "Your edits have been saved successfully.",
+      });
+      setEditingFile(null);
+    }
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div 
+        className="space-y-6"
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {/* Drag Overlay */}
+        {isDragging && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="border-4 border-dashed border-primary rounded-xl p-12 bg-primary/5">
+              <div className="flex flex-col items-center gap-4">
+                <Upload className="h-16 w-16 text-primary animate-bounce" />
+                <p className="text-xl font-medium text-primary">Drop files here to upload</p>
+                <p className="text-muted-foreground">Release to add files to your media library</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -159,48 +230,72 @@ const Media = () => {
           />
         </div>
 
-        {/* Toolbar */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search files..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            {selectedFiles.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete ({selectedFiles.length})
-              </Button>
+        {/* Drop Zone (when empty) */}
+        {filteredFiles.length === 0 && !isLoading && (
+          <div 
+            className={cn(
+              "border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer",
+              isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"
             )}
-            <div className="flex rounded-lg border">
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                className="rounded-r-none"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="icon"
-                className="rounded-l-none"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              Drag & drop files here
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              or click to browse your computer
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Supports images, videos, audio, PDFs, and documents
+            </p>
+          </div>
+        )}
+
+        {/* Toolbar */}
+        {(filteredFiles.length > 0 || searchQuery) && (
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search files..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedFiles.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete ({selectedFiles.length})
+                </Button>
+              )}
+              <div className="flex rounded-lg border">
+                <Button
+                  variant={viewMode === "grid" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="rounded-r-none"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="rounded-l-none"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Select All */}
         {filteredFiles.length > 0 && (
@@ -222,15 +317,15 @@ const Media = () => {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : filteredFiles.length === 0 ? (
+        ) : filteredFiles.length === 0 && searchQuery ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <ImageIcon className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground">No files found</h3>
             <p className="text-muted-foreground">
-              {searchQuery ? "Try a different search term" : "Upload your first file to get started"}
+              Try a different search term
             </p>
           </div>
-        ) : viewMode === "grid" ? (
+        ) : viewMode === "grid" && filteredFiles.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredFiles.map((file) => {
               const FileIcon = getFileIcon(file.type);
@@ -283,6 +378,16 @@ const Media = () => {
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {isImage && (
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-8 w-8"
+                        onClick={() => setEditingFile(file)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       size="icon"
                       variant="secondary"
@@ -307,7 +412,7 @@ const Media = () => {
               );
             })}
           </div>
-        ) : (
+        ) : filteredFiles.length > 0 ? (
           <div className="rounded-lg border bg-card">
             {filteredFiles.map((file, index) => {
               const FileIcon = getFileIcon(file.type);
@@ -353,6 +458,15 @@ const Media = () => {
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {isImage && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setEditingFile(file)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       size="icon"
                       variant="ghost"
@@ -383,7 +497,7 @@ const Media = () => {
               );
             })}
           </div>
-        )}
+        ) : null}
 
         {/* Preview Dialog */}
         <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
@@ -439,6 +553,19 @@ const Media = () => {
                     <Download className="mr-2 h-4 w-4" />
                     Download
                   </Button>
+                  {previewFile.type.startsWith("image/") && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setPreviewFile(null);
+                        setEditingFile(previewFile);
+                      }}
+                      className="flex-1"
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit Image
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={() => handleCopyUrl(previewFile.url)}
@@ -452,6 +579,17 @@ const Media = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Image Editor Dialog */}
+        {editingFile && (
+          <ImageEditorDialog
+            open={!!editingFile}
+            onOpenChange={(open) => !open && setEditingFile(null)}
+            imageUrl={editingFile.url}
+            imageName={editingFile.name}
+            onSave={handleImageSave}
+          />
+        )}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -59,12 +59,20 @@ export const useMedia = () => {
     saveFiles(updatedFiles);
   };
 
+  const updateFile = (id: string, updates: Partial<MediaFile>) => {
+    const updatedFiles = files.map((f) =>
+      f.id === id ? { ...f, ...updates } : f
+    );
+    saveFiles(updatedFiles);
+  };
+
   return {
     files,
     isLoading,
     addFile,
     deleteFile,
     deleteMultiple,
+    updateFile,
   };
 };
 
