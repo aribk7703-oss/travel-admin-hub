@@ -13,6 +13,7 @@ import AddCar from "./pages/AddCar";
 import Categories from "./pages/Categories";
 import Blog from "./pages/Blog";
 import Pages from "./pages/Pages";
+import Media from "./pages/Media";
 import NotFound from "./pages/NotFound";
 import WebsiteHome from "./pages/website/WebsiteHome";
 import WebsiteAbout from "./pages/website/WebsiteAbout";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/categories" element={<Categories />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/pages" element={<Pages />} />
+          <Route path="/media" element={<Media />} />
           {/* Public Website Routes */}
           <Route path="/website" element={<WebsiteHome />} />
           <Route path="/website/about" element={<WebsiteAbout />} />
