@@ -3,6 +3,13 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+ import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+ } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useMedia, formatFileSize, MediaFile } from "@/hooks/useMedia";
+ import { useMedia, formatFileSize, MediaFile, FileTypeFilter, filterByType, Folder } from "@/hooks/useMedia";
 import { useToast } from "@/hooks/use-toast";
 import { ImageEditorDialog } from "@/components/dashboard/ImageEditorDialog";
 import {
@@ -37,8 +44,13 @@ import {
   Grid3X3,
   List,
   Pencil,
+   FolderIcon,
+   FolderPlus,
+   ChevronRight,
+   MoveRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+ import { Badge } from "@/components/ui/badge";
 
 const getFileIcon = (type: string) => {
   if (type.startsWith("image/")) return ImageIcon;
@@ -49,7 +61,7 @@ const getFileIcon = (type: string) => {
 };
 
 const Media = () => {
-  const { files, isLoading, addFile, deleteFile, deleteMultiple, updateFile } = useMedia();
+   const { files, folders, isLoading, addFile, deleteFile, deleteMultiple, updateFile, moveToFolder, addFolder, deleteFolder } = useMedia();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -61,19 +73,32 @@ const Media = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
+   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+   const [typeFilter, setTypeFilter] = useState<FileTypeFilter>("all");
+   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+   const [newFolderName, setNewFolderName] = useState("");
+   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
 
-  const filteredFiles = files.filter((file) =>
-    file.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+   // Filter files by current folder, search query, and type
+   const filteredFiles = filterByType(
+     files.filter((file) => {
+       const matchesFolder = currentFolderId ? file.folder_id === currentFolderId : true;
+       const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
+       return matchesFolder && matchesSearch;
+     }),
+     typeFilter
+   );
 
-  const processFiles = async (fileList: FileList | File[]) => {
+   const currentFolder = folders.find((f) => f.id === currentFolderId);
+ 
+   const processFiles = async (fileList: FileList | globalThis.File[]) => {
     const filesToUpload = Array.from(fileList);
     if (filesToUpload.length === 0) return;
 
     setIsUploading(true);
     try {
       for (const file of filesToUpload) {
-        await addFile(file);
+         await addFile(file, currentFolderId || undefined);
       }
       toast({
         title: "Upload successful",
@@ -145,8 +170,8 @@ const Media = () => {
     }
   };
 
-  const handleDeleteSelected = () => {
-    deleteMultiple(selectedFiles);
+   const handleDeleteSelected = async () => {
+     await deleteMultiple(selectedFiles);
     setSelectedFiles([]);
     setDeleteDialogOpen(false);
     toast({
@@ -172,9 +197,9 @@ const Media = () => {
     document.body.removeChild(link);
   };
 
-  const handleImageSave = (editedImageUrl: string) => {
+   const handleImageSave = async (editedImageUrl: string) => {
     if (editingFile) {
-      updateFile(editingFile.id, { url: editedImageUrl });
+       await updateFile(editingFile.id, { url: editedImageUrl });
       toast({
         title: "Image saved",
         description: "Your edits have been saved successfully.",
@@ -182,6 +207,43 @@ const Media = () => {
       setEditingFile(null);
     }
   };
+ 
+   const handleCreateFolder = async () => {
+     if (!newFolderName.trim()) return;
+     try {
+       await addFolder(newFolderName.trim(), currentFolderId || undefined);
+       toast({
+         title: "Folder created",
+         description: `Folder "${newFolderName}" has been created.`,
+       });
+       setNewFolderName("");
+       setNewFolderDialogOpen(false);
+     } catch (error) {
+       toast({
+         title: "Error",
+         description: "Failed to create folder.",
+         variant: "destructive",
+       });
+     }
+   };
+ 
+   const handleMoveFiles = async (targetFolderId: string | null) => {
+     await moveToFolder(selectedFiles, targetFolderId);
+     toast({
+       title: "Files moved",
+       description: `${selectedFiles.length} file(s) moved successfully.`,
+     });
+     setSelectedFiles([]);
+     setMoveDialogOpen(false);
+   };
+ 
+   const handleDeleteFolder = async (folderId: string) => {
+     await deleteFolder(folderId);
+     if (currentFolderId === folderId) {
+       setCurrentFolderId(null);
+     }
+     toast({ title: "Folder deleted" });
+   };
 
   return (
     <DashboardLayout>
@@ -213,13 +275,22 @@ const Media = () => {
               Manage your images, videos, and other files
             </p>
           </div>
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {isUploading ? "Uploading..." : "Upload Files"}
-          </Button>
+           <div className="flex gap-2">
+             <Button
+               variant="outline"
+               onClick={() => setNewFolderDialogOpen(true)}
+             >
+               <FolderPlus className="mr-2 h-4 w-4" />
+               New Folder
+             </Button>
+             <Button
+               onClick={() => fileInputRef.current?.click()}
+               disabled={isUploading}
+             >
+               <Upload className="mr-2 h-4 w-4" />
+               {isUploading ? "Uploading..." : "Upload Files"}
+             </Button>
+           </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -229,6 +300,56 @@ const Media = () => {
             onChange={handleFileUpload}
           />
         </div>
+ 
+         {/* Breadcrumb and Folder Navigation */}
+         <div className="flex flex-wrap items-center gap-2">
+           <Button
+             variant={currentFolderId === null ? "secondary" : "ghost"}
+             size="sm"
+             onClick={() => setCurrentFolderId(null)}
+           >
+             <FolderIcon className="mr-2 h-4 w-4" />
+             All Files
+           </Button>
+           {currentFolder && (
+             <>
+               <ChevronRight className="h-4 w-4 text-muted-foreground" />
+               <Badge variant="secondary">{currentFolder.name}</Badge>
+             </>
+           )}
+         </div>
+ 
+         {/* Folders Grid */}
+         {folders.length > 0 && currentFolderId === null && (
+           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+             {folders.map((folder) => (
+               <div
+                 key={folder.id}
+                 className="group relative rounded-lg border bg-card p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+                 onClick={() => setCurrentFolderId(folder.id)}
+               >
+                 <div className="flex items-center gap-2">
+                   <FolderIcon className="h-8 w-8 text-primary" />
+                   <span className="text-sm font-medium truncate">{folder.name}</span>
+                 </div>
+                 <span className="text-xs text-muted-foreground">
+                   {files.filter((f) => f.folder_id === folder.id).length} files
+                 </span>
+                 <Button
+                   size="icon"
+                   variant="ghost"
+                   className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     handleDeleteFolder(folder.id);
+                   }}
+                 >
+                   <Trash2 className="h-3 w-3" />
+                 </Button>
+               </div>
+             ))}
+           </div>
+         )}
 
         {/* Drop Zone (when empty) */}
         {filteredFiles.length === 0 && !isLoading && (
@@ -253,7 +374,7 @@ const Media = () => {
         )}
 
         {/* Toolbar */}
-        {(filteredFiles.length > 0 || searchQuery) && (
+         {(files.length > 0 || searchQuery) && (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -265,15 +386,37 @@ const Media = () => {
               />
             </div>
             <div className="flex items-center gap-2">
+               <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as FileTypeFilter)}>
+                 <SelectTrigger className="w-[130px]">
+                   <SelectValue placeholder="All Types" />
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="all">All Types</SelectItem>
+                   <SelectItem value="images">Images</SelectItem>
+                   <SelectItem value="videos">Videos</SelectItem>
+                   <SelectItem value="audio">Audio</SelectItem>
+                   <SelectItem value="documents">Documents</SelectItem>
+                 </SelectContent>
+               </Select>
               {selectedFiles.length > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete ({selectedFiles.length})
-                </Button>
+                 <>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => setMoveDialogOpen(true)}
+                   >
+                     <MoveRight className="mr-2 h-4 w-4" />
+                     Move
+                   </Button>
+                   <Button
+                     variant="destructive"
+                     size="sm"
+                     onClick={() => setDeleteDialogOpen(true)}
+                   >
+                     <Trash2 className="mr-2 h-4 w-4" />
+                     Delete ({selectedFiles.length})
+                   </Button>
+                 </>
               )}
               <div className="flex rounded-lg border">
                 <Button
@@ -590,6 +733,61 @@ const Media = () => {
             onSave={handleImageSave}
           />
         )}
+ 
+         {/* New Folder Dialog */}
+         <Dialog open={newFolderDialogOpen} onOpenChange={setNewFolderDialogOpen}>
+           <DialogContent>
+             <DialogHeader>
+               <DialogTitle>Create New Folder</DialogTitle>
+             </DialogHeader>
+             <div className="space-y-4">
+               <Input
+                 placeholder="Folder name"
+                 value={newFolderName}
+                 onChange={(e) => setNewFolderName(e.target.value)}
+                 onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+               />
+               <div className="flex justify-end gap-2">
+                 <Button variant="outline" onClick={() => setNewFolderDialogOpen(false)}>
+                   Cancel
+                 </Button>
+                 <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+                   Create
+                 </Button>
+               </div>
+             </div>
+           </DialogContent>
+         </Dialog>
+ 
+         {/* Move to Folder Dialog */}
+         <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+           <DialogContent>
+             <DialogHeader>
+               <DialogTitle>Move {selectedFiles.length} file(s) to folder</DialogTitle>
+             </DialogHeader>
+             <div className="space-y-2">
+               <Button
+                 variant="outline"
+                 className="w-full justify-start"
+                 onClick={() => handleMoveFiles(null)}
+               >
+                 <FolderIcon className="mr-2 h-4 w-4" />
+                 Root (No folder)
+               </Button>
+               {folders.map((folder) => (
+                 <Button
+                   key={folder.id}
+                   variant="outline"
+                   className="w-full justify-start"
+                   onClick={() => handleMoveFiles(folder.id)}
+                 >
+                   <FolderIcon className="mr-2 h-4 w-4 text-primary" />
+                   {folder.name}
+                 </Button>
+               ))}
+             </div>
+           </DialogContent>
+         </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
