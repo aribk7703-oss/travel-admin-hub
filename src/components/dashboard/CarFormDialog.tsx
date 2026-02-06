@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Car } from "@/hooks/useCars";
+import { MediaPickerDialog } from "@/components/dashboard/MediaPickerDialog";
+import { Image as ImageIcon } from "lucide-react";
 
 interface CarFormDialogProps {
   open: boolean;
@@ -46,6 +48,7 @@ export const CarFormDialog = ({
     status: initialData?.status || "active" as Car["status"],
     image: initialData?.image || "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=200&h=120&fit=crop",
   });
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,133 +68,98 @@ export const CarFormDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Car" : "Edit Car"}</DialogTitle>
-          <DialogDescription>
-            {mode === "add"
-              ? "Add a new vehicle to your fleet."
-              : "Update the vehicle details."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Vehicle Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Executive Sedan"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{mode === "add" ? "Add New Car" : "Edit Car"}</DialogTitle>
+            <DialogDescription>
+              {mode === "add" ? "Add a new vehicle to your fleet." : "Update the vehicle details."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
+                <Label htmlFor="name">Vehicle Name</Label>
+                <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g., Executive Sedan" required />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      {carTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="seats">Seats</Label>
+                  <Input id="seats" type="number" min={1} max={100} value={formData.seats} onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) || 4 })} required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="feature">Feature</Label>
+                  <Select value={formData.feature} onValueChange={(value) => setFormData({ ...formData, feature: value })}>
+                    <SelectTrigger><SelectValue placeholder="Select feature" /></SelectTrigger>
+                    <SelectContent>
+                      {features.map((feature) => (
+                        <SelectItem key={feature} value={feature}>{feature}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Price per KM</Label>
+                  <Input id="price" value={formData.pricePerKm} onChange={(e) => setFormData({ ...formData, pricePerKm: e.target.value })} placeholder="e.g., ₹15/km" required />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(value: Car["status"]) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
                   <SelectContent>
-                    {carTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="seats">Seats</Label>
-                <Input
-                  id="seats"
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={formData.seats}
-                  onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) || 4 })}
-                  required
-                />
+                <Label>Image</Label>
+                <div className="flex gap-2">
+                  <Input value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} placeholder="https://..." className="flex-1" />
+                  <Button type="button" variant="outline" onClick={() => setMediaPickerOpen(true)}>
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    Browse
+                  </Button>
+                </div>
+                {formData.image && (
+                  <img src={formData.image} alt="Preview" className="h-20 w-32 object-cover rounded-md border" />
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="feature">Feature</Label>
-                <Select
-                  value={formData.feature}
-                  onValueChange={(value) => setFormData({ ...formData, feature: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select feature" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {features.map((feature) => (
-                      <SelectItem key={feature} value={feature}>
-                        {feature}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="submit">{mode === "add" ? "Add Vehicle" : "Save Changes"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-              <div className="grid gap-2">
-                <Label htmlFor="price">Price per KM</Label>
-                <Input
-                  id="price"
-                  value={formData.pricePerKm}
-                  onChange={(e) => setFormData({ ...formData, pricePerKm: e.target.value })}
-                  placeholder="e.g., ₹15/km"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: Car["status"]) => setFormData({ ...formData, status: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="image">Image URL</Label>
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              {mode === "add" ? "Add Vehicle" : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <MediaPickerDialog
+        open={mediaPickerOpen}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+      />
+    </>
   );
 };

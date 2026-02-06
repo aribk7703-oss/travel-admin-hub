@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Location } from '@/hooks/useLocations';
+import { MediaPickerDialog } from '@/components/dashboard/MediaPickerDialog';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface LocationFormDialogProps {
   open: boolean;
@@ -25,6 +27,7 @@ export const LocationFormDialog = ({ open, onOpenChange, location, onSubmit }: L
     status: 'active' as Location['status'],
     image: ''
   });
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   useEffect(() => {
     if (location) {
@@ -39,16 +42,7 @@ export const LocationFormDialog = ({ open, onOpenChange, location, onSubmit }: L
         image: location.image
       });
     } else {
-      setFormData({
-        name: '',
-        description: '',
-        lat: '',
-        lng: '',
-        address: '',
-        type: 'heritage',
-        status: 'active',
-        image: ''
-      });
+      setFormData({ name: '', description: '', lat: '', lng: '', address: '', type: 'heritage', status: 'active', image: '' });
     }
   }, [location, open]);
 
@@ -57,10 +51,7 @@ export const LocationFormDialog = ({ open, onOpenChange, location, onSubmit }: L
     onSubmit({
       name: formData.name,
       description: formData.description,
-      coordinates: {
-        lat: parseFloat(formData.lat) || 0,
-        lng: parseFloat(formData.lng) || 0
-      },
+      coordinates: { lat: parseFloat(formData.lat) || 0, lng: parseFloat(formData.lng) || 0 },
       address: formData.address,
       type: formData.type,
       status: formData.status,
@@ -70,125 +61,92 @@ export const LocationFormDialog = ({ open, onOpenChange, location, onSubmit }: L
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{location ? 'Edit Location' : 'Add New Location'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Location Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g., Ajanta Caves"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description of the location..."
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{location ? 'Edit Location' : 'Add New Location'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="lat">Latitude</Label>
-              <Input
-                id="lat"
-                type="number"
-                step="any"
-                value={formData.lat}
-                onChange={e => setFormData(prev => ({ ...prev, lat: e.target.value }))}
-                placeholder="e.g., 20.5519"
-                required
-              />
+              <Label htmlFor="name">Location Name</Label>
+              <Input id="name" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g., Ajanta Caves" required />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="lng">Longitude</Label>
-              <Input
-                id="lng"
-                type="number"
-                step="any"
-                value={formData.lng}
-                onChange={e => setFormData(prev => ({ ...prev, lng: e.target.value }))}
-                placeholder="e.g., 75.7033"
-                required
-              />
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" value={formData.description} onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Brief description of the location..." rows={3} />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Input
-              id="address"
-              value={formData.address}
-              onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))}
-              placeholder="Full address"
-            />
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="lat">Latitude</Label>
+                <Input id="lat" type="number" step="any" value={formData.lat} onChange={e => setFormData(prev => ({ ...prev, lat: e.target.value }))} placeholder="e.g., 20.5519" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lng">Longitude</Label>
+                <Input id="lng" type="number" step="any" value={formData.lng} onChange={e => setFormData(prev => ({ ...prev, lng: e.target.value }))} placeholder="e.g., 75.7033" required />
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: Location['type']) => setFormData(prev => ({ ...prev, type: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="heritage">Heritage</SelectItem>
-                  <SelectItem value="temple">Temple</SelectItem>
-                  <SelectItem value="cave">Cave</SelectItem>
-                  <SelectItem value="fort">Fort</SelectItem>
-                  <SelectItem value="city">City</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" value={formData.address} onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))} placeholder="Full address" />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <Select value={formData.type} onValueChange={(value: Location['type']) => setFormData(prev => ({ ...prev, type: value }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="heritage">Heritage</SelectItem>
+                    <SelectItem value="temple">Temple</SelectItem>
+                    <SelectItem value="cave">Cave</SelectItem>
+                    <SelectItem value="fort">Fort</SelectItem>
+                    <SelectItem value="city">City</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(value: Location['status']) => setFormData(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: Location['status']) => setFormData(prev => ({ ...prev, status: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Image</Label>
+              <div className="flex gap-2">
+                <Input value={formData.image} onChange={e => setFormData(prev => ({ ...prev, image: e.target.value }))} placeholder="https://..." className="flex-1" />
+                <Button type="button" variant="outline" onClick={() => setMediaPickerOpen(true)}>
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  Browse
+                </Button>
+              </div>
+              {formData.image && (
+                <img src={formData.image} alt="Preview" className="h-20 w-32 object-cover rounded-md border" />
+              )}
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              value={formData.image}
-              onChange={e => setFormData(prev => ({ ...prev, image: e.target.value }))}
-              placeholder="https://..."
-            />
-          </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="submit">{location ? 'Update' : 'Add'} Location</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">{location ? 'Update' : 'Add'} Location</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <MediaPickerDialog
+        open={mediaPickerOpen}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+      />
+    </>
   );
 };

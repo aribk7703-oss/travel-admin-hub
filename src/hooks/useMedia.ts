@@ -1,5 +1,6 @@
- import { useState, useEffect } from "react";
- import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface MediaFile {
   id: string;
@@ -23,13 +24,14 @@ export interface MediaFile {
  export type FileTypeFilter = "all" | "images" | "videos" | "audio" | "documents";
 
 export const useMedia = () => {
+  const { user } = useAuth();
   const [files, setFiles] = useState<MediaFile[]>([]);
-   const [folders, setFolders] = useState<Folder[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-     fetchData();
-  }, []);
+    if (user) fetchData();
+  }, [user]);
 
    const fetchData = async () => {
      setIsLoading(true);
@@ -85,18 +87,19 @@ export const useMedia = () => {
        .from("media")
        .getPublicUrl(filePath);
  
-     // Insert into database
-     const { data: insertedFile, error: insertError } = await supabase
-       .from("media_files")
-       .insert({
-         name: file.name,
-         storage_path: filePath,
-         url: urlData.publicUrl,
-         type: file.type,
-         size: file.size,
-         folder_id: folderId || null,
-       })
-       .select()
+    // Insert into database
+    const { data: insertedFile, error: insertError } = await supabase
+      .from("media_files")
+      .insert({
+        name: file.name,
+        storage_path: filePath,
+        url: urlData.publicUrl,
+        type: file.type,
+        size: file.size,
+        folder_id: folderId || null,
+        user_id: user?.id,
+      })
+      .select()
        .single();
  
      if (insertError) throw insertError;
@@ -176,15 +179,16 @@ export const useMedia = () => {
  
    const addFolder = async (name: string, parentId?: string): Promise<Folder> => {
      const slug = name.toLowerCase().replace(/\s+/g, "-");
-     const { data, error } = await supabase
-       .from("folders")
-       .insert({
-         name,
-         slug,
-         parent_id: parentId || null,
-       })
-       .select()
-       .single();
+    const { data, error } = await supabase
+      .from("folders")
+      .insert({
+        name,
+        slug,
+        parent_id: parentId || null,
+        user_id: user?.id,
+      })
+      .select()
+      .single();
  
      if (error) throw error;
      setFolders((prev) => [...prev, data]);
