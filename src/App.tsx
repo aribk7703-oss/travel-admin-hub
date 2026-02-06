@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Cars from "./pages/Cars";
 import Tours from "./pages/Tours";
@@ -14,6 +15,7 @@ import Categories from "./pages/Categories";
 import Blog from "./pages/Blog";
 import Pages from "./pages/Pages";
 import Media from "./pages/Media";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import WebsiteHome from "./pages/website/WebsiteHome";
 import WebsiteAbout from "./pages/website/WebsiteAbout";
@@ -35,23 +37,28 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/cars" element={<Cars />} />
-          <Route path="/cars/add" element={<AddCar />} />
-          <Route path="/cars/edit/:id" element={<AddCar />} />
+          {/* Auth Route */}
+          <Route path="/auth" element={<Auth />} />
+
+          {/* Protected Dashboard Routes */}
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/cars" element={<ProtectedRoute><Cars /></ProtectedRoute>} />
+          <Route path="/cars/add" element={<ProtectedRoute><AddCar /></ProtectedRoute>} />
+          <Route path="/cars/edit/:id" element={<ProtectedRoute><AddCar /></ProtectedRoute>} />
           <Route path="/cars/categories" element={<Navigate to="/categories?type=car" replace />} />
-          <Route path="/tours" element={<Tours />} />
-          <Route path="/tours/add" element={<AddTour />} />
-          <Route path="/tours/edit/:id" element={<AddTour />} />
+          <Route path="/tours" element={<ProtectedRoute><Tours /></ProtectedRoute>} />
+          <Route path="/tours/add" element={<ProtectedRoute><AddTour /></ProtectedRoute>} />
+          <Route path="/tours/edit/:id" element={<ProtectedRoute><AddTour /></ProtectedRoute>} />
           <Route path="/tours/categories" element={<Navigate to="/categories?type=tour" replace />} />
-          <Route path="/locations" element={<Locations />} />
-          <Route path="/locations/add" element={<AddLocation />} />
-          <Route path="/locations/edit/:id" element={<AddLocation />} />
+          <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />
+          <Route path="/locations/add" element={<ProtectedRoute><AddLocation /></ProtectedRoute>} />
+          <Route path="/locations/edit/:id" element={<ProtectedRoute><AddLocation /></ProtectedRoute>} />
           <Route path="/locations/categories" element={<Navigate to="/categories?type=location" replace />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/pages" element={<Pages />} />
-          <Route path="/media" element={<Media />} />
+          <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+          <Route path="/blog" element={<ProtectedRoute><Blog /></ProtectedRoute>} />
+          <Route path="/pages" element={<ProtectedRoute><Pages /></ProtectedRoute>} />
+          <Route path="/media" element={<ProtectedRoute><Media /></ProtectedRoute>} />
+
           {/* Public Website Routes */}
           <Route path="/website" element={<WebsiteHome />} />
           <Route path="/website/about" element={<WebsiteAbout />} />
@@ -63,6 +70,7 @@ const App = () => (
           <Route path="/website/contact" element={<WebsiteContact />} />
           <Route path="/website/blog" element={<WebsiteBlog />} />
           <Route path="/website/blog/:slug" element={<WebsiteBlogArticle />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
