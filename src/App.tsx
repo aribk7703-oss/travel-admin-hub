@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Cars from "./pages/Cars";
 import Tours from "./pages/Tours";
@@ -16,6 +16,7 @@ import Blog from "./pages/Blog";
 import Pages from "./pages/Pages";
 import Media from "./pages/Media";
 import Auth from "./pages/Auth";
+import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 import WebsiteHome from "./pages/website/WebsiteHome";
 import WebsiteAbout from "./pages/website/WebsiteAbout";
@@ -37,27 +38,28 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Auth Route */}
+          {/* Auth & Access Routes */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/access-denied" element={<AccessDenied />} />
 
-          {/* Protected Dashboard Routes */}
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/cars" element={<ProtectedRoute><Cars /></ProtectedRoute>} />
-          <Route path="/cars/add" element={<ProtectedRoute><AddCar /></ProtectedRoute>} />
-          <Route path="/cars/edit/:id" element={<ProtectedRoute><AddCar /></ProtectedRoute>} />
+          {/* Admin-Only Dashboard Routes */}
+          <Route path="/" element={<AdminRoute><Index /></AdminRoute>} />
+          <Route path="/cars" element={<AdminRoute><Cars /></AdminRoute>} />
+          <Route path="/cars/add" element={<AdminRoute><AddCar /></AdminRoute>} />
+          <Route path="/cars/edit/:id" element={<AdminRoute><AddCar /></AdminRoute>} />
           <Route path="/cars/categories" element={<Navigate to="/categories?type=car" replace />} />
-          <Route path="/tours" element={<ProtectedRoute><Tours /></ProtectedRoute>} />
-          <Route path="/tours/add" element={<ProtectedRoute><AddTour /></ProtectedRoute>} />
-          <Route path="/tours/edit/:id" element={<ProtectedRoute><AddTour /></ProtectedRoute>} />
+          <Route path="/tours" element={<AdminRoute><Tours /></AdminRoute>} />
+          <Route path="/tours/add" element={<AdminRoute><AddTour /></AdminRoute>} />
+          <Route path="/tours/edit/:id" element={<AdminRoute><AddTour /></AdminRoute>} />
           <Route path="/tours/categories" element={<Navigate to="/categories?type=tour" replace />} />
-          <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />
-          <Route path="/locations/add" element={<ProtectedRoute><AddLocation /></ProtectedRoute>} />
-          <Route path="/locations/edit/:id" element={<ProtectedRoute><AddLocation /></ProtectedRoute>} />
+          <Route path="/locations" element={<AdminRoute><Locations /></AdminRoute>} />
+          <Route path="/locations/add" element={<AdminRoute><AddLocation /></AdminRoute>} />
+          <Route path="/locations/edit/:id" element={<AdminRoute><AddLocation /></AdminRoute>} />
           <Route path="/locations/categories" element={<Navigate to="/categories?type=location" replace />} />
-          <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
-          <Route path="/blog" element={<ProtectedRoute><Blog /></ProtectedRoute>} />
-          <Route path="/pages" element={<ProtectedRoute><Pages /></ProtectedRoute>} />
-          <Route path="/media" element={<ProtectedRoute><Media /></ProtectedRoute>} />
+          <Route path="/categories" element={<AdminRoute><Categories /></AdminRoute>} />
+          <Route path="/blog" element={<AdminRoute><Blog /></AdminRoute>} />
+          <Route path="/pages" element={<AdminRoute><Pages /></AdminRoute>} />
+          <Route path="/media" element={<AdminRoute><Media /></AdminRoute>} />
 
           {/* Public Website Routes */}
           <Route path="/website" element={<WebsiteHome />} />

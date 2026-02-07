@@ -9,6 +9,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,7 @@ interface TopNavProps {
 
 export const TopNav = ({ onMenuClick, sidebarCollapsed }: TopNavProps) => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useRole();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -108,7 +110,7 @@ export const TopNav = ({ onMenuClick, sidebarCollapsed }: TopNavProps) => {
                 </Avatar>
                 <div className="hidden lg:flex flex-col items-start">
                   <span className="text-sm font-medium text-foreground">{userEmail}</span>
-                  <span className="text-xs text-primary">Administrator</span>
+                  <span className="text-xs text-primary">{isAdmin ? "Administrator" : "User"}</span>
                 </div>
                 <ChevronDown className="h-4 w-4 hidden lg:block" />
               </Button>
