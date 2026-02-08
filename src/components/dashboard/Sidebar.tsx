@@ -78,10 +78,7 @@ const systemItems: NavItem[] = [
   {
     title: "Users",
     icon: Users,
-    children: [
-      { title: "All Users", href: "/users" },
-      { title: "Add User", href: "/users/add" },
-    ],
+    href: "/users",
   },
   {
     title: "User Plans",
