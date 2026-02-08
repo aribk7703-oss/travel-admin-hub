@@ -15,7 +15,9 @@ import Categories from "./pages/Categories";
 import Blog from "./pages/Blog";
 import Pages from "./pages/Pages";
 import Media from "./pages/Media";
+import Users from "./pages/Users";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 import WebsiteHome from "./pages/website/WebsiteHome";
@@ -40,6 +42,7 @@ const App = () => (
         <Routes>
           {/* Auth & Access Routes */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/access-denied" element={<AccessDenied />} />
 
           {/* Admin-Only Dashboard Routes */}
@@ -60,6 +63,7 @@ const App = () => (
           <Route path="/blog" element={<AdminRoute><Blog /></AdminRoute>} />
           <Route path="/pages" element={<AdminRoute><Pages /></AdminRoute>} />
           <Route path="/media" element={<AdminRoute><Media /></AdminRoute>} />
+          <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
 
           {/* Public Website Routes */}
           <Route path="/website" element={<WebsiteHome />} />
