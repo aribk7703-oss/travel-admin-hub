@@ -36,6 +36,7 @@ const Users = () => {
 
   const filteredUsers = users.filter(
     (u) =>
+      u.email?.toLowerCase().includes(search.toLowerCase()) ||
       u.display_name?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -129,7 +130,7 @@ const Users = () => {
                       <TableHead>User</TableHead>
                       <TableHead>Roles</TableHead>
                       <TableHead className="hidden md:table-cell">Joined</TableHead>
-                      <TableHead className="hidden md:table-cell">Last Updated</TableHead>
+                      <TableHead className="hidden md:table-cell">Last Sign In</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -141,7 +142,7 @@ const Users = () => {
                           <TableCell>
                             <div>
                               <p className="font-medium text-foreground">{u.display_name || "Unnamed"}</p>
-                              <p className="text-xs text-muted-foreground">ID: {u.id.slice(0, 8)}...</p>
+                              <p className="text-xs text-muted-foreground">{u.email}</p>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -162,7 +163,9 @@ const Users = () => {
                             {format(new Date(u.created_at), "MMM d, yyyy")}
                           </TableCell>
                           <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                            {format(new Date(u.updated_at), "MMM d, yyyy")}
+                            {u.last_sign_in_at
+                              ? format(new Date(u.last_sign_in_at), "MMM d, yyyy")
+                              : "Never"}
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
