@@ -5,8 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 interface UserWithRoles {
   id: string;
   display_name: string | null;
+  email: string;
   created_at: string;
   updated_at: string;
+  last_sign_in_at: string | null;
   roles: string[];
 }
 
