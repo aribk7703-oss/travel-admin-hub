@@ -16,6 +16,7 @@ import Blog from "./pages/Blog";
 import Pages from "./pages/Pages";
 import Media from "./pages/Media";
 import Users from "./pages/Users";
+import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import AccessDenied from "./pages/AccessDenied";
