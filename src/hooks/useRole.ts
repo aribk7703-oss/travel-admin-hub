@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { User } from "@supabase/supabase-js";
 
-export const useRole = () => {
-  const { user } = useAuth();
+export const useRole = (user: User | null) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,8 +20,6 @@ export const useRole = () => {
           _user_id: user.id,
           _role: "admin",
         });
-
-        console.log("has_role RPC result:", { data, error, userId: user.id });
 
         if (error) {
           console.error("Error checking role:", error);
