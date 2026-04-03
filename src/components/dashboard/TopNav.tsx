@@ -20,7 +20,7 @@ interface TopNavProps {
 
 export const TopNav = ({ onMenuClick, sidebarCollapsed }: TopNavProps) => {
   const { user, signOut } = useAuth();
-  const { isAdmin } = useRole();
+  const { isAdmin } = useRole(user);
   const navigate = useNavigate();
   const { toast } = useToast();
 
