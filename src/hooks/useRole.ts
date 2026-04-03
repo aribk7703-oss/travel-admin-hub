@@ -22,6 +22,8 @@ export const useRole = () => {
           _role: "admin",
         });
 
+        console.log("has_role RPC result:", { data, error, userId: user.id });
+
         if (error) {
           console.error("Error checking role:", error);
           setIsAdmin(false);
