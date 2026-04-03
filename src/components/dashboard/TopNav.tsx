@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, Globe, Home, Menu, Sparkles, LogOut } from "lucide-react";
+import { Bell, ChevronDown, Globe, Home, Menu, Sparkles, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +20,7 @@ interface TopNavProps {
 
 export const TopNav = ({ onMenuClick, sidebarCollapsed }: TopNavProps) => {
   const { user, signOut } = useAuth();
-  const { isAdmin } = useRole();
+  const { isAdmin } = useRole(user);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -116,7 +116,10 @@ export const TopNav = ({ onMenuClick, sidebarCollapsed }: TopNavProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
