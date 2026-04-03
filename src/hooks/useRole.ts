@@ -1,13 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 export const useRole = (user: User | null) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const checkedUserId = useRef<string | null>(null);
+
+  // Keep loading true if user changed but we haven't checked yet
+  const effectiveLoading = isLoading || (user?.id !== checkedUserId.current);
 
   useEffect(() => {
     if (!user) {
+      checkedUserId.current = null;
       setIsAdmin(false);
       setIsLoading(false);
       return;
@@ -30,6 +35,7 @@ export const useRole = (user: User | null) => {
       } catch {
         setIsAdmin(false);
       } finally {
+        checkedUserId.current = user.id;
         setIsLoading(false);
       }
     };
@@ -37,5 +43,5 @@ export const useRole = (user: User | null) => {
     checkRole();
   }, [user]);
 
-  return { isAdmin, isLoading };
+  return { isAdmin, isLoading: effectiveLoading };
 };
